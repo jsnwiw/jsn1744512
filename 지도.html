@@ -673,26 +673,20 @@
       [38.7, 132.1]
     );
 
-    // 1. Esri 전세계 초고화질 항공 위성 (Maxar/Earthstar 고해상도 영상)
-    const esriSatelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    // 1. 한국어 지원 초고화질 하이브리드 위성 지도 (Google Maps Satellite + Korean Labels)
+    const googleKoreanSatLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&hl=ko', {
+      subdomains: '0123',
       maxZoom: 20,
-      maxNativeZoom: 19,
-      detectRetina: true,
+      attribution: '&copy; Google Maps'
+    });
+
+    // 2. Esri 전세계 초고화질 항공 위성 (순수 위성 사진)
+    const esriSatelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
       attribution: '&copy; Esri, Maxar, Earthstar Geographics'
     });
 
-    // 2. 한국어 지명/도로명 투명 라벨 오버레이 (CartoDB Voyager Labels - 한글 완벽 지원)
-    const koreanLabelsOverlay = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd',
-      maxZoom: 20,
-      detectRetina: true,
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap'
-    });
-
-    // 3. 초고화질 위성 + 한국어 라벨 번역 통합 레이어
-    const hdKoreanSatelliteGroup = L.layerGroup([esriSatelliteLayer, koreanLabelsOverlay]);
-
-    // 4. 일반 도로 지도 (OpenStreetMap)
+    // 3. 일반 도로 지도 (OpenStreetMap)
     const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
@@ -701,18 +695,15 @@
     const map = L.map('map', {
       center: [36.0, 127.8],
       zoom: 7,
-      minZoom: 7,
+      minZoom: 6,
       maxZoom: 20,
-      maxBounds: koreaBounds,
-      maxBoundsViscosity: 1.0,
-      layers: [hdKoreanSatelliteGroup]
+      layers: [googleKoreanSatLayer]
     });
-    map.fitBounds(koreaBounds);
 
     // 베이스 레이어 전환 컨트롤
     const baseMaps = {
-      "🛰️ 초고화질 위성 (한국어 표기)": hdKoreanSatelliteGroup,
-      "🌍 순수 위성 사진 (글씨 없음)": esriSatelliteLayer,
+      "🛰️ 초고화질 위성 (한국어 도로/지명 완벽 표시)": googleKoreanSatLayer,
+      "🌍 Esri 항공 위성 (순수 위성사진)": esriSatelliteLayer,
       "🗺️ 일반 도로 지도": osmLayer
     };
 
