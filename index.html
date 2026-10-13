@@ -706,24 +706,32 @@
       [38.7, 132.1]
     );
 
-    // 1. 국토교통부 브이월드(V-World) 공식 하이브리드 레이어 (도로명, 지번/번지, 행정구역 완벽 표시, 상업시설 핀 완전 없음)
+    // 1. 구글 전세계 초고화질 위성 사진 (Google Satellite)
+    const googleSatBaseLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      subdomains: '0123',
+      maxZoom: 20,
+      attribution: '&copy; Google Maps'
+    });
+
+    // 2. 구글 도로명·지번·행정구역 투명 오버레이 (시설/상권 POI 핀 완전 제거 필터 적용)
+    const googleRoadsAndAddressesLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=h&x={x}&y={y}&z={z}&hl=ko&apistyle=s.t:2|p.v:off', {
+      subdomains: '0123',
+      maxZoom: 20,
+      attribution: '&copy; Google Maps'
+    });
+
+    // 3. 구글 위성 + 도로명/지번만 표시 결합 레이어
+    const googleCleanSatelliteGroup = L.layerGroup([googleSatBaseLayer, googleRoadsAndAddressesLayer]);
+
+    // 4. 국토교통부 브이월드(V-World) 도로명/지번 오버레이 옵션
     const vworldHybridLayer = L.tileLayer('https://xdworld.vworld.kr/2d/Hybrid/service/{z}/{x}/{y}.png', {
       maxZoom: 20,
       maxNativeZoom: 19,
-      attribution: '&copy; 공간정보오픈플랫폼 V-World (국토교통부)'
+      attribution: '&copy; V-World (국토교통부)'
     });
+    const vworldSatGroup = L.layerGroup([googleSatBaseLayer, vworldHybridLayer]);
 
-    // 2. Esri 전세계 초고화질 항공 위성 (순수 위성 사진)
-    const esriSatelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 20,
-      maxNativeZoom: 19,
-      attribution: '&copy; Esri, Maxar, Earthstar Geographics'
-    });
-
-    // 3. [추천] 초고화질 위성 + 국토부 공식 도로명/지번 오버레이 (시설 핀 0개, 도로명과 지번만 선명하게 표시)
-    const roadAddressSatelliteGroup = L.layerGroup([esriSatelliteLayer, vworldHybridLayer]);
-
-    // 4. 일반 도로 지도 (OpenStreetMap)
+    // 5. 일반 도로 지도 (OpenStreetMap)
     const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
@@ -734,13 +742,14 @@
       zoom: 7,
       minZoom: 6,
       maxZoom: 20,
-      layers: [roadAddressSatelliteGroup]
+      layers: [googleCleanSatelliteGroup]
     });
 
     // 베이스 레이어 전환 컨트롤
     const baseMaps = {
-      "🛰️ 위성 + 도로명·지번만 표시 (시설 핀 없음)": roadAddressSatelliteGroup,
-      "🌍 순수 위성 사진 (글씨 없음)": esriSatelliteLayer,
+      "🛰️ 구글 위성 + 도로명·지번만 (시설 핀 없음)": googleCleanSatelliteGroup,
+      "🇰🇷 구글 위성 + 국토부 지번/지적": vworldSatGroup,
+      "🌍 순수 구글 위성 (글씨 없음)": googleSatBaseLayer,
       "🗺️ 일반 도로 지도": osmLayer
     };
 
