@@ -388,6 +388,108 @@
       color: var(--text-sub);
       line-height: 1.5;
     }
+
+    /* 반응형 미디어 쿼리 (모바일, 태블릿, 데스크톱 모든 환경 최적화) */
+    @media (max-width: 768px) {
+      body {
+        padding: 8px 6px;
+      }
+
+      .glass-phone-shell {
+        border-radius: 24px;
+        padding: 16px 14px;
+        gap: 12px;
+      }
+
+      .glass-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding-bottom: 12px;
+      }
+
+      .brand-ios {
+        gap: 10px;
+      }
+
+      .sf-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+        border-radius: 12px;
+      }
+
+      .brand-text h1 {
+        font-size: 18px;
+      }
+
+      .brand-text p {
+        font-size: 11px;
+      }
+
+      .search-dock {
+        max-width: 100%;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .search-glass-pill {
+        width: 100%;
+        flex: 1 1 100%;
+      }
+
+      .glass-input {
+        padding: 11px 16px 11px 42px;
+        font-size: 13px;
+      }
+
+      .ios-btn {
+        flex: 1;
+        padding: 10px 14px;
+        font-size: 13px;
+        justify-content: center;
+      }
+
+      .glass-chips-bar {
+        padding: 8px 10px;
+        gap: 6px;
+      }
+
+      .chip-label {
+        width: 100%;
+        margin-bottom: 2px;
+      }
+
+      .chip-divider {
+        display: none;
+      }
+
+      .ios-chip {
+        padding: 5px 10px;
+        font-size: 11px;
+      }
+
+      #map {
+        height: calc(100vh - 270px);
+        min-height: 420px;
+        border-radius: 18px;
+      }
+
+      .leaflet-control-layers {
+        font-size: 11px !important;
+        padding: 6px 8px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      #map {
+        min-height: 380px;
+      }
+
+      .brand-text h1 {
+        font-size: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -616,7 +718,9 @@
 
     L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
 
-    let searchMarker = null;
+    // 기기 화면 회전 또는 브라우저 창 크기 변경 시 지도 타일 즉시 자동 재배치
+    window.addEventListener('resize', () => map.invalidateSize());
+    window.addEventListener('orientationchange', () => setTimeout(() => map.invalidateSize(), 300));
 
     function handleSearch() {
       const query = document.getElementById('searchInput').value.trim();

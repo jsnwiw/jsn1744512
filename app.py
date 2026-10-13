@@ -10,15 +10,17 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 커스텀 스타일 적용
+# 커스텀 스타일 적용 (모바일/태블릿/데스크톱 풀스크린 반응형 최적화)
 st.markdown("""
     <style>
         .main .block-container {
-            padding-top: 1rem;
-            padding-bottom: 1rem;
-            padding-left: 2rem;
-            padding-right: 2rem;
-            max-width: 100%;
+            padding: 0.5rem 0.5rem !important;
+            max-width: 100% !important;
+        }
+        @media (max-width: 768px) {
+            .main .block-container {
+                padding: 0 !important;
+            }
         }
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
