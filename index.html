@@ -392,6 +392,23 @@
 
     <div id="resultInfo" class="status-dynamic"></div>
 
+    <!-- 실시간 인구 데이터 상태 표시 배지 -->
+    <div id="popRealtimeBadge" style="
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #6b7280;
+      padding: 5px 12px;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(0,0,0,0.07);
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      backdrop-filter: blur(10px);
+      transition: all 0.4s ease;
+      align-self: flex-start;
+    ">⏳ 인구수 데이터 로딩 중...</div>
+
     <div class="map-wrapper">
       <div id="map"></div>
       
@@ -639,7 +656,295 @@
       if (listEl) listEl.style.display = 'none';
     }
 
+<<<<<<< HEAD
     window.addEventListener('resize', () => map.invalidateSize());
+=======
+    function handleKeyNavigation(e) {
+      const listEl = document.getElementById('autocompleteList');
+      const items = listEl.querySelectorAll('.autocomplete-item');
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (items.length === 0) return;
+        selectedAutocompleteIdx = (selectedAutocompleteIdx + 1) % items.length;
+        updateItemHighlight(items);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (items.length === 0) return;
+        selectedAutocompleteIdx = (selectedAutocompleteIdx - 1 + items.length) % items.length;
+        updateItemHighlight(items);
+      } else if (e.key === 'Enter') {
+        if (selectedAutocompleteIdx >= 0 && items[selectedAutocompleteIdx]) {
+          e.preventDefault();
+          items[selectedAutocompleteIdx].click();
+        } else {
+          closeAutocomplete();
+          handleSearch();
+        }
+      } else if (e.key === 'Escape') {
+        closeAutocomplete();
+      }
+    }
+
+    function updateItemHighlight(items) {
+      items.forEach((item, idx) => {
+        if (idx === selectedAutocompleteIdx) {
+          item.classList.add('selected');
+          item.scrollIntoView({ block: 'nearest' });
+          // 입력창 텍스트 미리보기 (옵션)
+        } else {
+          item.classList.remove('selected');
+        }
+      });
+    }
+
+    // 바깥 클릭 시 드롭다운 닫기
+    document.addEventListener('click', (e) => {
+      const dock = document.querySelector('.search-glass-pill');
+      if (dock && !dock.contains(e.target)) {
+        closeAutocomplete();
+      }
+    });
+
+    // ── 지도 위 플로팅 바 마우스 드래그 & 휠 가로 스크롤 지원 ──
+    (function enableHorizontalDragScroll() {
+      const slider = document.getElementById('mapFloatingBar');
+      if (!slider) return;
+
+      let isDown = false;
+      let startX;
+      let scrollLeft;
+
+      slider.addEventListener('mousedown', (e) => {
+        // 버튼 클릭이 아닌 바 자체를 드래그할 때
+        isDown = true;
+        slider.style.cursor = 'grabbing';
+        startX = e.pageX - slider.offsetLeft;
+        scrollLeft = slider.scrollLeft;
+      });
+
+      slider.addEventListener('mouseleave', () => {
+        isDown = false;
+        slider.style.cursor = 'grab';
+      });
+
+      slider.addEventListener('mouseup', () => {
+        isDown = false;
+        slider.style.cursor = 'grab';
+      });
+
+      slider.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - slider.offsetLeft;
+        const walk = (x - startX) * 1.6; // 스크롤 감도
+        slider.scrollLeft = scrollLeft - walk;
+      });
+
+      // 마우스 휠 위/아래로 굴려도 좌/우로 부드럽게 밀기
+      slider.addEventListener('wheel', (e) => {
+        if (e.deltaY !== 0) {
+          e.preventDefault();
+          slider.scrollLeft += e.deltaY;
+        }
+      }, { passive: false });
+    })();
+
+    // ════════════════════════════════════════════════════════
+    // ── 실시간 인구수 연동 엔진 (Wikidata SPARQL API) ──
+    // ════════════════════════════════════════════════════════
+
+    // 전국 시·군·구 → Wikidata QID 매핑
+    const wikidataQidMap = {
+      // 특별시·광역시
+      "서울": "Q8684", "부산": "Q16520", "인천": "Q42872",
+      "대구": "Q27790", "광주": "Q41616", "대전": "Q41620",
+      "울산": "Q57203", "세종": "Q494350",
+      // 경기도
+      "수원": "Q476283", "용인": "Q1005891", "고양": "Q484680",
+      "화성": "Q491169", "성남": "Q487116", "부천": "Q495041",
+      "남양주": "Q487428", "안산": "Q491164", "평택": "Q493588",
+      "안양": "Q487956", "시흥": "Q494090", "파주": "Q494047",
+      "김포": "Q494166", "의정부": "Q491132", "하남": "Q491162",
+      "광명": "Q491094", "군포": "Q491141", "오산": "Q493591",
+      "이천": "Q493583", "양주": "Q494051", "안성": "Q493566",
+      "구리": "Q491107", "의왕": "Q491137", "포천": "Q494054",
+      "여주": "Q493584", "양평": "Q494050", "동두천": "Q491112",
+      "과천": "Q491097", "가평": "Q493563", "연천": "Q494052",
+      // 강원
+      "원주": "Q488535", "춘천": "Q488533", "강릉": "Q488537",
+      "동해": "Q488541", "속초": "Q488538", "삼척": "Q488540",
+      "태백": "Q488539", "정선": "Q488572", "영월": "Q488557",
+      "횡성": "Q488580", "평창": "Q488577", "인제": "Q488553",
+      "홍천": "Q488581", "양구": "Q488556", "화천": "Q488579",
+      "양양": "Q488576", "철원": "Q488578", "고성": "Q488543",
+      // 충북
+      "청주": "Q494340", "충주": "Q494347", "제천": "Q494343",
+      "음성": "Q494345", "진천": "Q494346", "단양": "Q494338",
+      "옥천": "Q494344", "영동": "Q494342", "증평": "Q494349",
+      "괴산": "Q494337", "보은": "Q494336",
+      // 충남
+      "천안": "Q484975", "아산": "Q488162", "서산": "Q487891",
+      "당진": "Q487833", "논산": "Q487842", "공주": "Q487832",
+      "보령": "Q487848", "홍성": "Q487901", "예산": "Q487882",
+      "부여": "Q487851", "태안": "Q487895", "서천": "Q487889",
+      "계룡": "Q487830", "금산": "Q487835", "청양": "Q487899",
+      // 전북
+      "전주": "Q498483", "익산": "Q498487", "군산": "Q498478",
+      "정읍": "Q498490", "완주": "Q498488", "남원": "Q498480",
+      "김제": "Q498479", "고창": "Q498476", "부안": "Q498482",
+      "임실": "Q498486", "순창": "Q498484", "진안": "Q498491",
+      "무주": "Q498481", "장수": "Q498489",
+      // 전남
+      "순천": "Q498497", "여수": "Q498499", "목포": "Q498489",
+      "광양": "Q498475", "나주": "Q498480", "무안": "Q498481",
+      "해남": "Q498500", "고흥": "Q498477", "화순": "Q498501",
+      "영광": "Q498496", "영암": "Q498495", "완도": "Q498498",
+      "담양": "Q498474", "보성": "Q498493", "신안": "Q498494",
+      "장흥": "Q498502", "강진": "Q498473", "함평": "Q498503",
+      "진도": "Q498492", "곡성": "Q498476", "구례": "Q498478",
+      "장성": "Q498503",
+      // 경북
+      "포항": "Q488523", "구미": "Q487804", "경산": "Q487796",
+      "경주": "Q488502", "안동": "Q487798", "김천": "Q487806",
+      "영주": "Q487809", "상주": "Q487813", "영천": "Q487810",
+      "문경": "Q487807", "칠곡": "Q487816", "예천": "Q487811",
+      "의성": "Q487815", "울진": "Q487817", "봉화": "Q487801",
+      "청송": "Q487814", "영덕": "Q487808", "고령": "Q487803",
+      "성주": "Q487812", "청도": "Q487814", "군위": "Q487804",
+      "영양": "Q487808", "울릉": "Q487818",
+      // 경남
+      "창원": "Q483430", "김해": "Q483448", "양산": "Q483440",
+      "진주": "Q483447", "거제": "Q483432", "통영": "Q483444",
+      "사천": "Q483438", "밀양": "Q483436", "함안": "Q483449",
+      "거창": "Q483431", "창녕": "Q483443", "하동": "Q483446",
+      "합천": "Q483450", "남해": "Q483437", "함양": "Q483449",
+      "산청": "Q483439", "의령": "Q483445", "고성": "Q483433",
+      // 제주
+      "제주시": "Q24048", "서귀포시": "Q690312"
+    };
+
+    async function fetchRealTimePopulation() {
+      // 1. localStorage 24시간 캐시 체크
+      try {
+        const cached = localStorage.getItem('kr_pop_wikidata_v2');
+        if (cached) {
+          const { data, ts } = JSON.parse(cached);
+          if (Date.now() - ts < 86400000) { // 24시간
+            applyPopulationData(data);
+            const d = new Date(ts);
+            showPopBadge('캐시', `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 기준`);
+            return;
+          }
+        }
+      } catch(e) {}
+
+      // 2. Wikidata SPARQL 배치 쿼리 (단 1번 요청으로 전체 처리)
+      const qids = Object.values(wikidataQidMap).map(q => `wd:${q}`).join(' ');
+      const sparql = `
+        SELECT ?item ?population WHERE {
+          VALUES ?item { ${qids} }
+          ?item wdt:P1082 ?population.
+        }
+      `;
+
+      try {
+        showPopBadge('loading', '');
+        const resp = await fetch(
+          `https://query.wikidata.org/sparql?query=${encodeURIComponent(sparql)}&format=json`,
+          {
+            headers: {
+              'Accept': 'application/sparql-results+json',
+              'User-Agent': 'KoreaInfraMap/2.0 (educational project)'
+            }
+          }
+        );
+
+        if (!resp.ok) throw new Error('API 응답 오류');
+        const json = await resp.json();
+
+        // QID → 키워드 역매핑
+        const reverseMap = {};
+        for (const [kw, qid] of Object.entries(wikidataQidMap)) {
+          reverseMap[`http://www.wikidata.org/entity/${qid}`] = kw;
+        }
+
+        // 결과 파싱 (동일 QID 여러 인구수 → 가장 큰 값 사용)
+        const popData = {};
+        for (const row of json.results.bindings) {
+          const uri = row.item.value;
+          const kw = reverseMap[uri];
+          if (!kw) continue;
+          const p = parseInt(row.population.value, 10);
+          if (!popData[kw] || p > popData[kw]) popData[kw] = p;
+        }
+
+        // 캐시 저장
+        localStorage.setItem('kr_pop_wikidata_v2', JSON.stringify({ data: popData, ts: Date.now() }));
+
+        applyPopulationData(popData);
+        const now = new Date();
+        showPopBadge('실시간', `${now.getFullYear()}년 ${now.getMonth()+1}월 실시간`);
+
+      } catch (err) {
+        console.warn('[인구통계] Wikidata API 실패, 내부 DB 사용:', err);
+        showPopBadge('내부DB', '2024~2025 주민등록통계');
+      }
+    }
+
+    function applyPopulationData(popData) {
+      // allRegions의 pop 값 실시간 업데이트
+      allRegions.forEach(region => {
+        for (const [kw, pop] of Object.entries(popData)) {
+          if (pop > 1000 && (
+            region.keywords.some(k => k === kw || k.includes(kw) || kw.includes(k)) ||
+            region.name.includes(kw)
+          )) {
+            region.pop = pop;
+            break;
+          }
+        }
+      });
+      // districtPopDb도 실시간 업데이트
+      for (const [kw, pop] of Object.entries(popData)) {
+        if (districtPopDb.hasOwnProperty(kw) && pop > 1000) {
+          districtPopDb[kw] = pop;
+        }
+      }
+    }
+
+    function showPopBadge(mode, label) {
+      const badge = document.getElementById('popRealtimeBadge');
+      if (!badge) return;
+      if (mode === '실시간') {
+        badge.innerHTML = `🟢 인구수 실시간 반영 · ${label}`;
+        badge.style.color = '#059669';
+        badge.style.background = 'rgba(236,253,245,0.9)';
+        badge.style.border = '1px solid #a7f3d0';
+      } else if (mode === '캐시') {
+        badge.innerHTML = `🔄 인구수 최신 캐시 · ${label}`;
+        badge.style.color = '#0284c7';
+        badge.style.background = 'rgba(240,249,255,0.9)';
+        badge.style.border = '1px solid #bae6fd';
+      } else if (mode === 'loading') {
+        badge.innerHTML = `⏳ 실시간 인구수 불러오는 중...`;
+        badge.style.color = '#9333ea';
+        badge.style.background = 'rgba(250,245,255,0.9)';
+        badge.style.border = '1px solid #d8b4fe';
+      } else {
+        badge.innerHTML = `📊 인구수: 내부 통계 DB · ${label}`;
+        badge.style.color = '#6b7280';
+        badge.style.background = 'rgba(255,255,255,0.7)';
+        badge.style.border = '1px solid rgba(0,0,0,0.07)';
+      }
+    }
+
+    // 페이지 로드 후 실시간 인구 데이터 자동 연동
+    window.addEventListener('load', () => {
+      setTimeout(fetchRealTimePopulation, 800);
+    });
+
+>>>>>>> e5c238bd4175aed4687977d138af9438582c39e4
   </script>
 </body>
 </html>
