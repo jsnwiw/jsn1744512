@@ -706,24 +706,21 @@
       [38.7, 132.1]
     );
 
-    // 1. 구글 전세계 초고화질 위성 사진 (Google Satellite)
+    // 1. 구글 초고화질 위성 + 도로명·지번만 표시 (단일 하이브리드 스트림으로 회색 배경 없이 완벽 렌더링)
+    const googleCleanSatelliteLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&hl=ko&apistyle=s.t:2|p.v:off', {
+      subdomains: '0123',
+      maxZoom: 20,
+      attribution: '&copy; Google Maps'
+    });
+
+    // 2. 순수 구글 위성 사진 (라벨 없음)
     const googleSatBaseLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
       subdomains: '0123',
       maxZoom: 20,
       attribution: '&copy; Google Maps'
     });
 
-    // 2. 구글 도로명·지번·행정구역 투명 오버레이 (시설/상권 POI 핀 완전 제거 필터 적용)
-    const googleRoadsAndAddressesLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=h&x={x}&y={y}&z={z}&hl=ko&apistyle=s.t:2|p.v:off', {
-      subdomains: '0123',
-      maxZoom: 20,
-      attribution: '&copy; Google Maps'
-    });
-
-    // 3. 구글 위성 + 도로명/지번만 표시 결합 레이어
-    const googleCleanSatelliteGroup = L.layerGroup([googleSatBaseLayer, googleRoadsAndAddressesLayer]);
-
-    // 4. 일반 도로 지도 (OpenStreetMap)
+    // 3. 일반 도로 지도 (OpenStreetMap)
     const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
@@ -734,12 +731,12 @@
       zoom: 7,
       minZoom: 6,
       maxZoom: 20,
-      layers: [googleCleanSatelliteGroup]
+      layers: [googleCleanSatelliteLayer]
     });
 
     // 베이스 레이어 전환 컨트롤
     const baseMaps = {
-      "🛰️ 구글 위성 + 도로명·지번만 (시설 핀 없음)": googleCleanSatelliteGroup,
+      "🛰️ 구글 위성 + 도로명·지번만 (시설 핀 없음)": googleCleanSatelliteLayer,
       "🌍 순수 구글 위성 (글씨 없음)": googleSatBaseLayer,
       "🗺️ 일반 도로 지도": osmLayer
     };
