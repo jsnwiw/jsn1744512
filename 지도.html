@@ -581,6 +581,42 @@
       border-color: rgba(245, 158, 11, 0.2);
     }
 
+    .infra-tag.education {
+      background: rgba(99, 102, 241, 0.12);
+      color: #4338ca;
+      border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .infra-tag.culture {
+      background: rgba(168, 85, 247, 0.12);
+      color: #7c3aed;
+      border-color: rgba(168, 85, 247, 0.2);
+    }
+
+    .infra-tag.fire {
+      background: rgba(249, 115, 22, 0.12);
+      color: #c2410c;
+      border-color: rgba(249, 115, 22, 0.2);
+    }
+
+    .infra-tag.welfare {
+      background: rgba(20, 184, 166, 0.12);
+      color: #0f766e;
+      border-color: rgba(20, 184, 166, 0.2);
+    }
+
+    .infra-tag.digital {
+      background: rgba(6, 182, 212, 0.12);
+      color: #0e7490;
+      border-color: rgba(6, 182, 212, 0.2);
+    }
+
+    .infra-tag.good {
+      background: rgba(16, 185, 129, 0.12);
+      color: #059669;
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+
     .infra-score-bar {
       margin: 8px 0;
       padding: 8px 10px;
@@ -753,6 +789,38 @@
 
       <span class="chip-divider"></span>
 
+      <span class="chip-label" style="color: #4338ca;">📚 교육 소외:</span>
+      <button class="ios-chip" onclick="quickSearch('임실군')">전북 임실군 (고교 1개교)</button>
+      <button class="ios-chip" onclick="quickSearch('장수군')">전북 장수군 (학원 전무)</button>
+      <button class="ios-chip" onclick="quickSearch('봉화군')">경북 봉화군 (대학교 전무)</button>
+
+      <span class="chip-divider"></span>
+
+      <span class="chip-label" style="color: #7c3aed;">🎭 문화/체육 소외:</span>
+      <button class="ios-chip" onclick="quickSearch('울릉군')">경북 울릉군 (문화시설 전무)</button>
+      <button class="ios-chip" onclick="quickSearch('영덕군')">경북 영덕군 (공연장 부재)</button>
+      <button class="ios-chip" onclick="quickSearch('진안군')">전북 진안군 (체육관 부재)</button>
+
+      <span class="chip-divider"></span>
+
+      <span class="chip-label" style="color: #c2410c;">🚒 소방/안전 소외:</span>
+      <button class="ios-chip alert" onclick="quickSearch('옹진군')">인천 옹진군 (도서지역 골든타임 초과)</button>
+      <button class="ios-chip alert" onclick="quickSearch('횡성군')">강원 횡성군 (소방서 원거리)</button>
+
+      <span class="chip-divider"></span>
+
+      <span class="chip-label" style="color: #0f766e;">🏠 복지/돌봄 소외:</span>
+      <button class="ios-chip" onclick="quickSearch('군위군')">대구 군위군 (노인돌봄 인력부족)</button>
+      <button class="ios-chip" onclick="quickSearch('함양군')">경남 함양군 (어린이집 감소)</button>
+
+      <span class="chip-divider"></span>
+
+      <span class="chip-label" style="color: #0e7490;">📡 통신/디지털 소외:</span>
+      <button class="ios-chip" onclick="quickSearch('영월군')">강원 영월군 (5G 음영지역)</button>
+      <button class="ios-chip" onclick="quickSearch('화순군')">전남 화순군 (디지털 접근성 취약)</button>
+
+      <span class="chip-divider"></span>
+
       <span class="chip-label" style="color: #4b5563;">📉 소멸위험 복합지역:</span>
       <button class="ios-chip" onclick="quickSearch('의성군')">경북 의성군</button>
       <button class="ios-chip" onclick="quickSearch('정선군')">강원 정선군</button>
@@ -868,19 +936,41 @@
       { name: "제주 제주시", keywords: ["제주", "제주시"], lat: 33.4996, lng: 126.5312, pop: 491000, desc: "조천읍, 한림읍, 연동 등", level: 12 },
       { name: "제주 서귀포시", keywords: ["서귀포", "서귀포시"], lat: 33.2541, lng: 126.5601, pop: 182000, desc: "중문관광단지, 성산읍 남부", level: 12 },
 
-      // [소외·인프라 취약 지자체 핵심 데이터]
-      { name: "경북 영양군", keywords: ["영양", "영양군"], lat: 36.6666, lng: 129.1125, pop: 15800, desc: "전국 최소 인구 자치군. 24시간 응급의료기관 및 산부인과 부재, 고속도로 미경유 등 대표적인 인프라 소외지", level: 12, infraStatus: "심각", medical: "응급실 전무(보건의료원 의존)", traffic: "철도/고속도로 없음", score: "취약도 96/100" },
-      { name: "전남 신안군", keywords: ["신안", "신안군", "흑산도", "홍도"], lat: 34.8335, lng: 126.3516, pop: 37900, desc: "1004개의 섬으로 구성되어 기상 악화 시 응급환자 닥터헬기/해경 함정 이송 의존, 여객선 결항 잦음", level: 11, infraStatus: "심각", medical: "도서벽지 의료접근 취약", traffic: "도서 연도교 미완 및 선박의존", score: "취약도 94/100" },
-      { name: "강원 태백시", keywords: ["태백", "태백시"], lat: 37.1641, lng: 128.9856, pop: 39000, desc: "과거 탄광지대 쇠퇴 이후 시(市) 단위 중 최저 인구. 필수 의료진 부족 및 고속도로 접근성 전국 최하위권", level: 12, infraStatus: "심각", medical: "소아청소년·분만 인프라 붕괴", traffic: "고속도로 접근 1시간 이상", score: "취약도 91/100" },
-      { name: "경북 청송군", keywords: ["청송", "청송군", "주왕산"], lat: 36.4357, lng: 129.0573, pop: 24100, desc: "철도 미경유 산간 오지. 종합병원 접근 시간 1시간 이상 소요되는 대표 교통·의료 소외지", level: 12, infraStatus: "위험", medical: "응급의료센터 원거리 위치", traffic: "철도 미운행 / 국도 의존", score: "취약도 89/100" },
-      { name: "강원 양구군", keywords: ["양구", "양구군"], lat: 38.1098, lng: 127.9897, pop: 21100, desc: "군부대 감축(국방개혁) 및 산간 접경지역으로 철도 및 고속도로 부재, 상업·문화시설 극도 부족", level: 12, infraStatus: "위험", medical: "군 보건소 의존", traffic: "철도 부재 (춘천~속초선 착공)", score: "취약도 88/100" },
-      { name: "전남 구례군", keywords: ["구례", "구례군", "지리산"], lat: 35.2025, lng: 127.4628, pop: 24700, desc: "지리산 국립공원 배후 산간지역. 응급수술 가능한 대형병원 부족으로 순천/광주 원거리 이송 필요", level: 12, infraStatus: "위험", medical: "응급의료기관 부족", traffic: "KTX 일부정차, 버스노선 축소", score: "취약도 85/100" },
-      { name: "경북 의성군", keywords: ["의성", "의성군"], lat: 36.3527, lng: 128.6972, pop: 49800, desc: "전국 지자체 중 소멸위험지수 최상위 고위험군. 초고령화(45% 이상)로 복지·간병 인프라 수요 급증하나 인력 태부족", level: 12, infraStatus: "위험", medical: "고령 돌봄인프라 부족", traffic: "중앙선 철도 복선화 진행 중", score: "취약도 87/100" },
-      { name: "강원 정선군", keywords: ["정선", "정선군", "사북"], lat: 37.3807, lng: 128.6608, pop: 34500, desc: "산간 협곡 지형으로 겨울철 폭설 시 육상 교통 고립 위험, 폐광 이후 정주 여건 및 교육 인프라 급감", level: 12, infraStatus: "위험", medical: "의료 취약지", traffic: "태백선 철도 의존 및 산악도로", score: "취약도 86/100" },
-      { name: "전북 무주군", keywords: ["무주", "무주군", "덕유산"], lat: 35.9868, lng: 127.6607, pop: 23200, desc: "내륙 산간 벽지. 대전/전주 등 대도시 3차 병원까지 이동 시간이 길어 중증 응급환자 골든타임 확보 취약", level: 12, infraStatus: "위험", medical: "중증응급 골든타임 취약", traffic: "통영대전고속도로 외 철도 전무", score: "취약도 84/100" },
-      { name: "전남 고흥군", keywords: ["고흥", "고흥군"], lat: 34.6111, lng: 127.2847, pop: 61800, desc: "남해안 반도 끝자락에 위치하여 광주 등 거점도시까지 1시간 40분 이상 소요, 고령 인구 비율 최고 수준", level: 12, infraStatus: "위험", medical: "응급·혈액투석 인프라 부족", traffic: "철도 미경유 / 반도형 막다른 교통", score: "취약도 83/100" },
-      { name: "전북 남원시", keywords: ["남원", "남원시"], lat: 35.4164, lng: 127.3903, pop: 77000, desc: "지리산권 거점 시(市)이나 지방의료원 의사 구인난 장기화 및 산간 오지 마을 대중교통 감축", level: 12, infraStatus: "주의", medical: "남원의료원 전문의 구인난", traffic: "전라선 KTX 정차", score: "취약도 76/100" },
-      { name: "전북 김제시", keywords: ["김제", "김제시"], lat: 35.8036, lng: 126.8808, pop: 81000, desc: "농촌 고령화 비율 극심, 면 단위 소외 지역 버스 배차간격 길고 청년층 정주 인프라 부족", level: 12, infraStatus: "주의", medical: "전문 병의원 전주 의존", traffic: "호남선 철도 경유", score: "취약도 74/100" },
+      // [소외·인프라 취약 지자체 핵심 데이터 (7대 인프라 분석)]
+      { name: "경북 영양군", keywords: ["영양", "영양군"], lat: 36.6666, lng: 129.1125, pop: 15800, desc: "전국 최소 인구 자치군. 24시간 응급의료기관 및 산부인과 부재, 고속도로 미경유 등 대표적인 인프라 소외지", level: 12, infraStatus: "심각", medical: "응급실 전무(보건의료원 의존)", traffic: "철도/고속도로 없음", education: "고교 1개교, 학원 전무", culture: "공연장·영화관 부재", fire: "소방관 1인당 담당 면적 최대", welfare: "독거노인 돌봄 인력 극부족", digital: "5G 미구축 / 인터넷 음영지역", score: "취약도 96/100" },
+      { name: "전남 신안군", keywords: ["신안", "신안군", "흑산도", "홍도"], lat: 34.8335, lng: 126.3516, pop: 37900, desc: "1004개의 섬으로 구성되어 기상 악화 시 응급환자 닥터헬기/해경 함정 이송 의존, 여객선 결항 잦음", level: 11, infraStatus: "심각", medical: "도서벽지 의료접근 취약", traffic: "도서 연도교 미완 및 선박의존", education: "분교 통폐합 가속", culture: "문화회관 1개소(압해)", fire: "해양 소방 골든타임 40분 초과", welfare: "섬마을 경로당 기반 돌봄", digital: "해저 광케이블 의존 / 통신 불안정", score: "취약도 94/100" },
+      { name: "강원 태백시", keywords: ["태백", "태백시"], lat: 37.1641, lng: 128.9856, pop: 39000, desc: "과거 탄광지대 쇠퇴 이후 시(市) 단위 중 최저 인구. 필수 의료진 부족 및 고속도로 접근성 전국 최하위권", level: 12, infraStatus: "심각", medical: "소아청소년·분만 인프라 붕괴", traffic: "고속도로 접근 1시간 이상", education: "초등학교 통폐합 진행", culture: "영화관 1개소, 도서관 부족", fire: "산악지형 소방차 접근 취약", welfare: "폐광지역 복지관 노후화", digital: "산간 LTE 음영 다수", score: "취약도 91/100" },
+      { name: "경북 청송군", keywords: ["청송", "청송군", "주왕산"], lat: 36.4357, lng: 129.0573, pop: 24100, desc: "철도 미경유 산간 오지. 종합병원 접근 시간 1시간 이상 소요되는 대표 교통·의료 소외지", level: 12, infraStatus: "위험", medical: "응급의료센터 원거리 위치", traffic: "철도 미운행 / 국도 의존", education: "중학교 2교로 통폐합", culture: "주왕산 외 문화인프라 전무", fire: "산림화재 대응 인력 부족", welfare: "재가복지 서비스 사각지대", digital: "면 지역 통신 음영 광범위", score: "취약도 89/100" },
+      { name: "강원 양구군", keywords: ["양구", "양구군"], lat: 38.1098, lng: 127.9897, pop: 21100, desc: "군부대 감축(국방개혁) 및 산간 접경지역으로 철도 및 고속도로 부재, 상업·문화시설 극도 부족", level: 12, infraStatus: "위험", medical: "군 보건소 의존", traffic: "철도 부재 (춘천~속초선 착공)", education: "고교 1개교, 사교육 전무", culture: "공연·전시시설 전무", fire: "접경지 소방출동 제한구역", welfare: "군인 가족복지 외 취약", digital: "접경지 통신규제 지역 존재", score: "취약도 88/100" },
+      { name: "전남 구례군", keywords: ["구례", "구례군", "지리산"], lat: 35.2025, lng: 127.4628, pop: 24700, desc: "지리산 국립공원 배후 산간지역. 응급수술 가능한 대형병원 부족으로 순천/광주 원거리 이송 필요", level: 12, infraStatus: "위험", medical: "응급의료기관 부족", traffic: "KTX 일부정차, 버스노선 축소", education: "초등 분교 폐교 잇따름", culture: "군립도서관 1개소", fire: "산악구조 전담팀 부재", welfare: "농촌 독거노인 긴급돌봄 부족", digital: "산간마을 광대역 미설치", score: "취약도 85/100" },
+      { name: "경북 의성군", keywords: ["의성", "의성군"], lat: 36.3527, lng: 128.6972, pop: 49800, desc: "전국 지자체 중 소멸위험지수 최상위 고위험군. 초고령화(45% 이상)로 복지·간병 인프라 수요 급증하나 인력 태부족", level: 12, infraStatus: "위험", medical: "고령 돌봄인프라 부족", traffic: "중앙선 철도 복선화 진행 중", education: "학령인구 급감으로 학교 축소", culture: "문화시설 예산 전국 최하위", fire: "의용소방대 고령화", welfare: "요양시설 대비 수요 폭증", digital: "면 단위 디지털 교육 사각지대", score: "취약도 87/100" },
+      { name: "강원 정선군", keywords: ["정선", "정선군", "사북"], lat: 37.3807, lng: 128.6608, pop: 34500, desc: "산간 협곡 지형으로 겨울철 폭설 시 육상 교통 고립 위험, 폐광 이후 정주 여건 및 교육 인프라 급감", level: 12, infraStatus: "위험", medical: "의료 취약지", traffic: "태백선 철도 의존 및 산악도로", education: "분교 폐교 / 통학버스 의존", culture: "정선아리랑센터 외 부재", fire: "폭설 시 소방출동 지연", welfare: "폐광촌 사회복지 공백", digital: "산간 협곡 LTE 음영", score: "취약도 86/100" },
+      { name: "전북 무주군", keywords: ["무주", "무주군", "덕유산"], lat: 35.9868, lng: 127.6607, pop: 23200, desc: "내륙 산간 벽지. 대전/전주 등 대도시 3차 병원까지 이동 시간이 길어 중증 응급환자 골든타임 확보 취약", level: 12, infraStatus: "위험", medical: "중증응급 골든타임 취약", traffic: "통영대전고속도로 외 철도 전무", education: "면 단위 초등학교 복식수업", culture: "무주반딧불축제 외 문화시설 한정", fire: "산악지형 화재 대응 지연", welfare: "면 단위 노인복지 사각", digital: "덕유산 인근 통신 불능", score: "취약도 84/100" },
+      { name: "전남 고흥군", keywords: ["고흥", "고흥군"], lat: 34.6111, lng: 127.2847, pop: 61800, desc: "남해안 반도 끝자락에 위치하여 광주 등 거점도시까지 1시간 40분 이상 소요, 고령 인구 비율 최고 수준", level: 12, infraStatus: "위험", medical: "응급·혈액투석 인프라 부족", traffic: "철도 미경유 / 반도형 막다른 교통", education: "면 지역 학교 통폐합 가속", culture: "나로우주센터 외 관광·문화 한정", fire: "해안 지역 소방 접근 취약", welfare: "초고령 돌봄 수요 대비 인력 부족", digital: "해안벽지 통신 음영 다수", score: "취약도 83/100" },
+      { name: "전북 남원시", keywords: ["남원", "남원시"], lat: 35.4164, lng: 127.3903, pop: 77000, desc: "지리산권 거점 시(市)이나 지방의료원 의사 구인난 장기화 및 산간 오지 마을 대중교통 감축", level: 12, infraStatus: "주의", medical: "남원의료원 전문의 구인난", traffic: "전라선 KTX 정차", education: "읍면 지역 학원 부족", culture: "광한루원 등 문화자원 양호", fire: "지리산 산악구조 체계", welfare: "면 단위 방문돌봄 축소", digital: "산간 일부 음영지역", score: "취약도 76/100" },
+      { name: "전북 김제시", keywords: ["김제", "김제시"], lat: 35.8036, lng: 126.8808, pop: 81000, desc: "농촌 고령화 비율 극심, 면 단위 소외 지역 버스 배차간격 길고 청년층 정주 인프라 부족", level: 12, infraStatus: "주의", medical: "전문 병의원 전주 의존", traffic: "호남선 철도 경유", education: "면 단위 학교 통폐합", culture: "벽골제 외 문화시설 부족", fire: "소방 인력 광역 분산", welfare: "농촌 돌봄 취약계층 증가", digital: "농촌 디지털 교육 미비", score: "취약도 74/100" },
+
+      // [교육 소외 대표 지자체]
+      { name: "전북 임실군", keywords: ["임실", "임실군"], lat: 35.6177, lng: 127.2890, pop: 27000, desc: "고등학교 1개교만 운영되어 대부분 학생이 전주·남원으로 통학. 사교육 인프라 전무", level: 12, infraStatus: "위험", medical: "보건의료원 의존", traffic: "철도 미경유 / 국도 의존", education: "고교 1개교, 학원·서점 전무", culture: "치즈마을 체험 외 문화시설 부재", fire: "소방관서 1개소", welfare: "다문화가족 지원 미흡", digital: "면 단위 인터넷 불안정", score: "취약도 82/100" },
+      { name: "전북 장수군", keywords: ["장수", "장수군"], lat: 35.6477, lng: 127.5213, pop: 21500, desc: "해발 300~500m 고원지대. 학원·서점 전무하여 교육 접근성 전국 최하위권", level: 12, infraStatus: "위험", medical: "보건소 1개소 의존", traffic: "고속도로 IC 원거리", education: "학원·서점 전무 / 통학버스 편도 40분", culture: "공연·전시시설 부재", fire: "산간 화재 취약", welfare: "독거노인 비율 40% 초과", digital: "고원지대 통신 음영 광범위", score: "취약도 81/100" },
+      { name: "경북 봉화군", keywords: ["봉화", "봉화군"], lat: 36.8930, lng: 128.7328, pop: 30100, desc: "대학교 전무, 고등학교 2개교. 산간 오지 학생 통학거리 극심하여 기숙사 의존", level: 12, infraStatus: "위험", medical: "보건의료원 1개소", traffic: "영동선 철도 일부 경유", education: "대학교 전무 / 고교 2교 / 사교육 불모지", culture: "분천역 외 관광·문화 한정", fire: "산림화재 빈발지역", welfare: "농촌 아동돌봄 사각지대", digital: "산간 광케이블 미설치 마을 다수", score: "취약도 80/100" },
+
+      // [문화/체육 소외 대표 지자체]
+      { name: "경북 울릉군", keywords: ["울릉", "울릉군", "독도"], lat: 37.4845, lng: 130.9059, pop: 9200, desc: "대한민국 유일 도서(島嶼) 군. 영화관·공연장·체육관 전무, 문화생활은 본토 방문 필수", level: 12, infraStatus: "심각", medical: "울릉병원 1개소 / 응급이송 헬기 의존", traffic: "항공편 미취항(울릉공항 건설중) / 선박 의존", education: "고교 1개교 / 대학 전무", culture: "영화관·공연장·체육관 전무", fire: "도서 소방 인력 극소", welfare: "본토 대비 복지서비스 제한적", digital: "해저케이블 1회선 의존", score: "취약도 95/100" },
+      { name: "경북 영덕군", keywords: ["영덕", "영덕군"], lat: 36.4150, lng: 129.3650, pop: 34800, desc: "동해안 소도시. 상설 공연장·영화관 부재로 문화생활은 포항/영주 의존", level: 12, infraStatus: "위험", medical: "영덕병원 1개소", traffic: "동해선 철도 미개통 구간", education: "고교 2교 / 학원 극소", culture: "상설 공연장·영화관 부재", fire: "해안+산간 이중 취약", welfare: "어촌 고령 돌봄 부족", digital: "해안 산간 통신 불안정", score: "취약도 78/100" },
+      { name: "전북 진안군", keywords: ["진안", "진안군", "마이산"], lat: 35.7917, lng: 127.4267, pop: 23800, desc: "마이산 관광자원 외 문화·체육시설 극도 부족. 종합체육관·공공도서관 미비", level: 12, infraStatus: "위험", medical: "보건의료원 의존", traffic: "철도 미경유 / 국도 의존", education: "면 단위 학교 통폐합", culture: "체육관 부재 / 도서관 1개소", fire: "산간 소방출동 30분 이상", welfare: "귀농·귀촌 정주 지원 미흡", digital: "마이산 인근 통신 불능 구간", score: "취약도 79/100" },
+
+      // [소방/안전 소외 대표 지자체]
+      { name: "인천 옹진군", keywords: ["옹진", "옹진군", "백령도", "연평도"], lat: 37.4463, lng: 126.6358, pop: 19800, desc: "23개 유인도 구성 도서지역. 해상 응급이송 소요시간이 골든타임(1시간)을 초과하는 섬이 다수", level: 11, infraStatus: "심각", medical: "섬별 보건진료소 의존", traffic: "선박 의존 / 기상결항 잦음", education: "섬별 분교 통폐합", culture: "문화시설 전무 (백령도 제외)", fire: "해상 소방 골든타임 1시간 초과 도서 다수", welfare: "섬 주민 긴급복지 접근 극난", digital: "일부 도서 통신 불능", score: "취약도 93/100" },
+      { name: "강원 횡성군", keywords: ["횡성", "횡성군"], lat: 37.4885, lng: 127.9848, pop: 45200, desc: "산간 면적 넓어 소방서에서 원거리 마을까지 출동 30분 이상 소요. 겨울 결빙 시 추가 지연", level: 12, infraStatus: "위험", medical: "횡성병원 1개소", traffic: "영동고속도로 경유", education: "면 단위 학교 감소", culture: "횡성한우축제 외 문화시설 한정", fire: "소방서~원거리 마을 출동 30분 초과", welfare: "산간 독거노인 긴급구조 어려움", digital: "산간 계곡 지역 통신 음영", score: "취약도 77/100" },
+
+      // [복지/돌봄 소외 대표 지자체]
+      { name: "대구 군위군", keywords: ["군위", "군위군"], lat: 36.2428, lng: 128.5728, pop: 22800, desc: "2023년 대구 편입 후에도 고령화율 45% 이상 유지. 노인돌봄 전문인력 극심한 부족", level: 12, infraStatus: "위험", medical: "군위병원 1개소 / 전문의 부족", traffic: "중앙선 철도 경유", education: "고교 1개교", culture: "문화시설 극소", fire: "소방 인력 부족", welfare: "노인돌봄 전문인력 극부족 / 어린이집 감소", digital: "면 단위 디지털 사각지대", score: "취약도 82/100" },
+      { name: "경남 함양군", keywords: ["함양", "함양군", "지리산"], lat: 35.5206, lng: 127.7253, pop: 37200, desc: "지리산 북측 산간 군. 어린이집 폐원 가속으로 면 지역 영유아 양육 환경 극심 악화", level: 12, infraStatus: "위험", medical: "보건의료원 의존", traffic: "통영대전고속도로 일부 경유", education: "면 단위 학교 통폐합 가속", culture: "함양물레방아 외 문화시설 부족", fire: "산악 소방 취약", welfare: "어린이집 폐원 가속 / 노인복지 인력 부족", digital: "산간 마을 인터넷 미비", score: "취약도 80/100" },
+
+      // [통신/디지털 소외 대표 지자체]
+      { name: "강원 영월군", keywords: ["영월", "영월군"], lat: 37.1837, lng: 128.4615, pop: 37600, desc: "석회암 협곡 지형으로 5G 기지국 설치 난이도 높아 광범위한 통신 음영지역 존재", level: 12, infraStatus: "위험", medical: "영월의료원 1개소", traffic: "중앙선 철도 / 38번 국도", education: "면 단위 분교 폐교", culture: "김삿갓면 문화자원 양호", fire: "협곡 산악 소방 취약", welfare: "탄광촌 사회복지 공백", digital: "5G 미구축 / 석회암 협곡 LTE 음영 광범위", score: "취약도 79/100" },
+      { name: "전남 화순군", keywords: ["화순", "화순군"], lat: 35.0644, lng: 126.9863, pop: 60500, desc: "광주 인접이나 면 단위 산간마을은 디지털 접근성 극도 취약. 고령층 디지털 소외 심각", level: 12, infraStatus: "주의", medical: "화순전대병원 연계 양호", traffic: "광주 생활권 / 호남선 경유", education: "면 단위 학교 감소", culture: "고인돌유적 등 문화자원 양호", fire: "소방 인프라 보통", welfare: "광주 연계 복지 가능", digital: "면 단위 고령층 디지털 소외 / 산간마을 광대역 미설치", score: "취약도 68/100" },
 
       // [대표 읍·면·동·리]
       { name: "경기 남양주시 화도읍", keywords: ["화도읍", "화도"], lat: 37.6653, lng: 127.3075, pop: 114500, desc: "수도권 최대 읍으로 대중교통·출퇴근 광역인프라 확충 진행 중", level: 14, infraStatus: "양호", medical: "수도권 종합병원 접근 용이", traffic: "경춘선 및 광역버스망", score: "인프라 풍부" },
@@ -1043,6 +1133,11 @@
               <div class="infra-tags">
                 ${found.medical ? `<span class="infra-tag ${statusClass}">🏥 ${found.medical}</span>` : ''}
                 ${found.traffic ? `<span class="infra-tag ${statusClass}">🚆 ${found.traffic}</span>` : ''}
+                ${found.education ? `<span class="infra-tag education">📚 ${found.education}</span>` : ''}
+                ${found.culture ? `<span class="infra-tag culture">🎭 ${found.culture}</span>` : ''}
+                ${found.fire ? `<span class="infra-tag fire">🚒 ${found.fire}</span>` : ''}
+                ${found.welfare ? `<span class="infra-tag welfare">🏠 ${found.welfare}</span>` : ''}
+                ${found.digital ? `<span class="infra-tag digital">📡 ${found.digital}</span>` : ''}
               </div>
             ` : ''}
 
