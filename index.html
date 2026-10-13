@@ -219,6 +219,56 @@
       backdrop-filter: blur(16px);
       border: 1px solid var(--glass-border-subtle);
       border-radius: 20px;
+      max-height: 600px;
+      overflow: hidden;
+      transition: max-height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  padding 0.4s ease,
+                  opacity 0.3s ease;
+    }
+
+    .glass-chips-bar.collapsed {
+      max-height: 0;
+      padding: 0 18px;
+      opacity: 0;
+      border-color: transparent;
+      pointer-events: none;
+    }
+
+    .chips-toggle-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0 auto;
+      padding: 8px 20px;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1.5px solid var(--glass-border);
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--apple-blue);
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .chips-toggle-btn:hover {
+      background: var(--apple-blue);
+      color: #fff;
+      border-color: var(--apple-blue);
+      transform: scale(1.04);
+      box-shadow: 0 6px 20px rgba(0, 122, 255, 0.3);
+    }
+
+    .chips-toggle-btn .toggle-arrow {
+      display: inline-block;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      font-size: 14px;
+    }
+
+    .chips-toggle-btn.active .toggle-arrow {
+      transform: rotate(180deg);
     }
 
     .chip-label {
@@ -773,7 +823,12 @@
       </div>
     </header>
 
-    <section class="glass-chips-bar">
+    <button class="chips-toggle-btn active" id="chipsToggle" onclick="toggleChips()">
+      📋 인프라 취약지역 목록
+      <span class="toggle-arrow">▼</span>
+    </button>
+
+    <section class="glass-chips-bar collapsed" id="chipsBar">
       <span class="chip-label" style="color: #dc2626;">🚨 응급의료 소외:</span>
       <button class="ios-chip alert" onclick="quickSearch('영양군')">경북 영양군 (응급의료원 부재)</button>
       <button class="ios-chip alert" onclick="quickSearch('신안군')">전남 신안군 (도서 응급이송 취약)</button>
@@ -1173,6 +1228,13 @@
       box.style.display = 'block';
       box.className = 'status-dynamic ' + (isSuccess ? 'success' : 'fail');
       box.innerHTML = html;
+    }
+
+    function toggleChips() {
+      const bar = document.getElementById('chipsBar');
+      const btn = document.getElementById('chipsToggle');
+      bar.classList.toggle('collapsed');
+      btn.classList.toggle('active');
     }
   </script>
 </body>
