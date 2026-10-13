@@ -2447,7 +2447,7 @@
       showResult(`📍 <b>${found.name}</b> 위치로 이동했습니다. [인프라 상태: ${found.infraStatus || '양호'}]`, true);
     }
 
-    // ── 실시간 자동완성 추천 검색 기능 ──
+    // ── 읍·면·동 전문 스마트 실시간 자동완성 추천 엔진 ──
     let selectedAutocompleteIdx = -1;
 
     function handleInputAutocomplete(val) {
@@ -2461,37 +2461,90 @@
         return;
       }
 
-      // 이름 및 키워드 기반 매칭 (최대 7개)
-      const matches = allRegions.filter(item => {
-        return item.name.toLowerCase().includes(query) || 
-               item.keywords.some(k => k.toLowerCase().includes(query));
-      }).slice(0, 7);
+      // 접미사 분석: 사용자가 "읍", "면", "동", "리"를 입력 중인지 판별
+      const cleanQ = query.replace(/\s+/g, '');
+
+      // 1. 점수 기반 가중치 매칭 (읍/면/동 명칭 우선 순위 부여)
+      const scoredMatches = [];
+
+      allRegions.forEach(item => {
+        const nameLower = item.name.toLowerCase();
+        let score = 0;
+        let matchType = '시·군·구';
+
+        // 읍/면/동/리 분류 태그 부여
+        if (nameLower.includes('읍')) matchType = '읍';
+        else if (nameLower.includes('면')) matchType = '면';
+        else if (nameLower.includes('동')) matchType = '동';
+        else if (nameLower.includes('리')) matchType = '리';
+
+        // 1) 이름이 검색어로 시작하거나 정확히 일치할 때
+        if (nameLower.startsWith(query) || item.keywords.some(k => k.toLowerCase() === query)) {
+          score += 100;
+        }
+        // 2) 읍/면/동 단어에 직접 부합할 때
+        if (nameLower.includes(query)) {
+          score += 60;
+        }
+        // 3) 키워드에 포함될 때
+        if (item.keywords.some(k => k.toLowerCase().includes(query))) {
+          score += 40;
+        }
+        // 4) 읍/면/동 단어만 친 경우 (예: "와산" -> "와산리", "물금" -> "물금읍", "노형" -> "노형동")
+        if (item.keywords.some(k => k.toLowerCase().startsWith(cleanQ))) {
+          score += 50;
+        }
+
+        if (score > 0) {
+          scoredMatches.push({ item, score, matchType });
+        }
+      });
+
+      // 점수 높은 순 정렬 후 상위 9개 추천
+      scoredMatches.sort((a, b) => b.score - a.score);
+      const matches = scoredMatches.slice(0, 9);
 
       if (matches.length === 0) {
         listEl.innerHTML = `
-          <div style="padding: 10px 14px; font-size: 13px; color: #86868b; text-align: center;">
-            일치하는 지역이 없습니다
+          <div style="padding: 12px 14px; font-size: 13px; color: #86868b; text-align: center;">
+            🔍 '<strong>${query}</strong>' 읍·면·동 추천 검색 결과가 없습니다.<br>
+            <span style="font-size:11.5px; color:#9ca3af; margin-top:4px; display:inline-block;">엔터를 누르면 전국 지명 데이터베이스에서 직접 탐색합니다.</span>
           </div>
         `;
         listEl.style.display = 'block';
         return;
       }
 
-      const html = matches.map((m, idx) => {
+      const html = matches.map((mObj, idx) => {
+        const m = mObj.item;
+        const tag = mObj.matchType;
+        
         // 검색어 하이라이트
         const regex = new RegExp(`(${query})`, 'gi');
-        const highlightedName = m.name.replace(regex, '<span class="highlight">$1</span>');
+        const highlightedName = m.name.replace(regex, '<span class="highlight" style="color:#007aff; font-weight:700;">$1</span>');
+        
         const popFormatted = m.pop >= 10000 
           ? (m.pop / 10000).toFixed(1) + '만' 
           : m.pop.toLocaleString();
+        
         const isAlert = m.infraStatus === '심각' || m.infraStatus === '위험';
 
+        let tagBg = '#e0f2fe';
+        let tagColor = '#0284c7';
+        if (tag === '읍') { tagBg = '#fef3c7'; tagColor = '#d97706'; }
+        else if (tag === '면') { tagBg = '#dcfce7'; tagColor = '#16a34a'; }
+        else if (tag === '동') { tagBg = '#f3e8ff'; tagColor = '#9333ea'; }
+        else if (tag === '리') { tagBg = '#ffedd5'; tagColor = '#ea580c'; }
+
         return `
-          <div class="autocomplete-item" data-idx="${idx}" onclick="selectAutocomplete('${m.name}')">
-            <span>📍 ${highlightedName}</span>
-            <div class="item-meta">
-              ${m.infraStatus ? `<span class="item-badge ${isAlert ? 'alert' : ''}">${m.infraStatus}</span>` : ''}
-              <span>${popFormatted}명</span>
+          <div class="autocomplete-item" data-idx="${idx}" onclick="selectAutocomplete('${m.name}')" style="display:flex; justify-content:space-between; align-items:center; padding:9px 12px; cursor:pointer;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:6px; background:${tagBg}; color:${tagColor};">${tag}</span>
+              <span style="font-size:13px; font-weight:600; color:#1f2937;">${highlightedName}</span>
+            </div>
+            <div class="item-meta" style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:#6b7280;">
+              ${m.infraStatus ? `<span class="item-badge ${isAlert ? 'alert' : ''}" style="font-size:10.5px; padding:2px 6px; border-radius:6px; background:${isAlert ? '#fee2e2' : '#f3f4f6'}; color:${isAlert ? '#dc2626' : '#4b5563'}; font-weight:600;">${m.infraStatus}</span>` : ''}
+              <span>👥 ${popFormatted}명</span>
             </div>
           </div>
         `;
