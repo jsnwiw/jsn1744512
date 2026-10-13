@@ -482,6 +482,7 @@
       overflow: visible; /* 레이어 옵션창이 잘리지 않도록 visible */
       border: 1.5px solid var(--glass-border);
       box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
+      perspective: 1200px; /* 3D 입체 투시 원근감 */
     }
 
     #map {
@@ -491,6 +492,19 @@
       z-index: 1;
       /* 지도 타일만 안쪽에서 잘리도록 처리 */
       clip-path: inset(0 round 26px);
+      transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.8s ease;
+      transform-origin: center 85%;
+    }
+
+    /* 3D 입체 틸트 모드 활성화 시 */
+    .map-wrapper.mode-3d #map {
+      transform: rotateX(42deg) scale(1.08) translateY(-3%);
+      box-shadow: 0 35px 65px -10px rgba(0, 0, 0, 0.45);
+      filter: contrast(1.06) saturate(1.15);
+    }
+
+    .map-wrapper.mode-3d .map-floating-region-bar {
+      transform: translateY(-8px) scale(0.96);
     }
 
     /* Leaflet 컨트롤이 항상 지도 위에 표시되도록 z-index 강제 상향 */
@@ -1830,6 +1844,18 @@
       attribution: '&copy; OpenStreetMap contributors'
     });
 
+    // 4. 3D 입체 위성 뷰 (Esri World Imagery + 경사도 틸트 투시)
+    const esri3dLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: '&copy; Esri & NASA EarthData'
+    });
+
+    // 5. 3D 지형 음영 맵 (OpenTopoMap 지형 등고선 & 입체 음영)
+    const topo3dLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      maxZoom: 17,
+      attribution: '&copy; OpenTopoMap contributors'
+    });
+
     // 대한민국 영토 전용 경계 좌표 (남단 마라도~북단 휴전선, 서단 백령도~동단 독도)
     const koreaBounds = L.latLngBounds(
       [33.0, 124.5], // 남서단 (마라도 남측 해역, 백령도 서측)
@@ -1852,7 +1878,9 @@
 
     // 베이스 레이어 전환 컨트롤
     const baseMaps = {
-      "🛰️ 구글 위성 + 도로명·지번만 (시설 핀 없음)": googleCleanSatelliteLayer,
+      "🛰️ 구글 위성 + 도로명·지번만 (기본)": googleCleanSatelliteLayer,
+      "⛰️ 3D 입체 위성 맵 (투시 원근감)": esri3dLayer,
+      "🏔️ 3D 입체 지형 음영 맵 (지형 고저차)": topo3dLayer,
       "🌍 순수 구글 위성 (글씨 없음)": googleSatBaseLayer,
       "🗺️ 일반 도로 지도": osmLayer
     };
@@ -1892,7 +1920,19 @@
         flashEl.classList.add('active');
       }
 
-      // 3. 다이내믹 아일랜드 토스트 알림
+      // 3. 3D 입체 맵 선택 시 래퍼에 3D 틸트 원근감 클래스 자동 토글
+      const mapWrapper = document.querySelector('.map-wrapper');
+      if (mapWrapper) {
+        if (e.name.includes('3D')) {
+          mapWrapper.classList.add('mode-3d');
+          setTimeout(() => map.invalidateSize(), 300);
+        } else {
+          mapWrapper.classList.remove('mode-3d');
+          setTimeout(() => map.invalidateSize(), 300);
+        }
+      }
+
+      // 4. 다이내믹 아일랜드 토스트 알림
       showLayerToast(e.name);
     });
 
