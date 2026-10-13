@@ -725,64 +725,28 @@
       attribution: '&copy; OpenStreetMap contributors'
     });
 
-    // 인구수 표시 오버레이 레이어 생성
-    const populationMarkersLayer = L.layerGroup();
-
-    allRegions.forEach(item => {
-      const isAlert = item.infraStatus === "심각" || item.infraStatus === "위험";
-      const shortName = item.name.split(" ").slice(-1)[0];
-      const popFormatted = item.pop >= 10000 
-        ? (item.pop / 10000).toFixed(1) + "만" 
-        : item.pop.toLocaleString();
-
-      const badgeHtml = `
-        <div class="pop-marker-badge ${isAlert ? 'alert' : ''}" onclick="quickSearch('${item.name}')">
-          ${shortName}<span class="num">${popFormatted}</span>
-        </div>
-      `;
-
-      const customIcon = L.divIcon({
-        className: 'pop-custom-div-icon',
-        html: badgeHtml,
-        iconSize: [0, 0]
-      });
-
-      const marker = L.marker([item.lat, item.lng], { icon: customIcon });
-      marker.bindPopup(`
-        <div class="pop-card">
-          <div class="pop-header"><h3>📍 ${item.name}</h3></div>
-          <div class="stat-badge"><span>등록 인구:</span><span class="num">${item.pop.toLocaleString()}</span><span>명</span></div>
-          ${item.infraStatus ? `<div class="infra-score-bar"><span>인프라 등급:</span><b>${item.infraStatus}</b></div>` : ''}
-          <p class="desc">${item.desc}</p>
-        </div>
-      `);
-      populationMarkersLayer.addLayer(marker);
-    });
-
     const map = L.map('map', {
       center: [36.0, 127.8],
       zoom: 7,
       minZoom: 6,
       maxZoom: 20,
-      layers: [googleKoreanSatLayer, populationMarkersLayer]
+      layers: [googleKoreanSatLayer]
     });
 
-    // 베이스 레이어 & 오버레이 전환 컨트롤
+    // 베이스 레이어 전환 컨트롤
     const baseMaps = {
       "🛰️ 초고화질 위성 (한국어 도로/지명)": googleKoreanSatLayer,
       "🌍 Esri 항공 위성 (순수 위성사진)": esriSatelliteLayer,
       "🗺️ 일반 도로 지도": osmLayer
     };
 
-    const overlayMaps = {
-      "👥 인구수 표시 배지": populationMarkersLayer
-    };
-
-    L.control.layers(baseMaps, overlayMaps, { position: 'topright' }).addTo(map);
+    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
 
     // 기기 화면 회전 또는 브라우저 창 크기 변경 시 지도 타일 즉시 자동 재배치
     window.addEventListener('resize', () => map.invalidateSize());
     window.addEventListener('orientationchange', () => setTimeout(() => map.invalidateSize(), 300));
+
+    let searchMarker = null;
 
     function handleSearch() {
       const query = document.getElementById('searchInput').value.trim();
@@ -803,7 +767,25 @@
       if (found) {
         map.flyTo([found.lat, found.lng], found.level, { duration: 1.2 });
 
-        searchMarker = L.marker([found.lat, found.lng]).addTo(map);
+        const isAlert = found.infraStatus === "심각" || found.infraStatus === "위험";
+        const shortName = found.name.split(" ").slice(-1)[0];
+        const popFormatted = found.pop >= 10000 
+          ? (found.pop / 10000).toFixed(1) + "만" 
+          : found.pop.toLocaleString();
+
+        const badgeHtml = `
+          <div class="pop-marker-badge ${isAlert ? 'alert' : ''}">
+            📍 ${shortName} <span class="num">${popFormatted}명</span>
+          </div>
+        `;
+
+        const customIcon = L.divIcon({
+          className: 'pop-custom-div-icon',
+          html: badgeHtml,
+          iconSize: [0, 0]
+        });
+
+        searchMarker = L.marker([found.lat, found.lng], { icon: customIcon }).addTo(map);
 
         const statusClass = (found.infraStatus === "심각") ? "alert" : (found.infraStatus === "위험" ? "warning" : "");
 
@@ -836,9 +818,9 @@
         `;
         searchMarker.bindPopup(popupHtml).openPopup();
 
-        showResult(`📍 <b>${found.name}</b> [인프라 상태: <span style="color:${found.infraStatus === '심각' ? '#b91c1c' : '#b45309'}">${found.infraStatus || '분석완료'}</span>] - 등록 인구: <b>${found.pop.toLocaleString()} 명</b>`, true);
+        showResult(`📍 <b>${found.name}</b> [등록 인구수: <b>${found.pop.toLocaleString()} 명</b> | 인프라 상태: <span style="color:${found.infraStatus === '심각' ? '#b91c1c' : '#b45309'}">${found.infraStatus || '양호'}</span>]`, true);
       } else {
-        showResult(`❌ <b>'${query}'</b> 검색 결과를 찾을 수 없습니다. (예: 영양군, 신안군, 태백시, 무주군 등을 입력해보세요)`, false);
+        showResult(`❌ <b>'${query}'</b> 검색 결과를 찾을 수 없습니다. (예: 영양군, 신안군, 태백시, 의성군, 무주군 등을 입력해보세요)`, false);
       }
     }
 
