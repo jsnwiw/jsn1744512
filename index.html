@@ -172,6 +172,76 @@
       box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2);
     }
 
+    /* 실시간 자동완성 검색 추천 드롭다운 */
+    .autocomplete-list {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1.5px solid rgba(255, 255, 255, 0.9);
+      border-radius: 18px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.14);
+      max-height: 280px;
+      overflow-y: auto;
+      z-index: 2000;
+      padding: 6px;
+      display: none;
+      animation: dropDownSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes dropDownSlide {
+      from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .autocomplete-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-main);
+      transition: all 0.15s ease;
+    }
+
+    .autocomplete-item:hover, .autocomplete-item.selected {
+      background: rgba(0, 122, 255, 0.1);
+      color: var(--apple-blue);
+      transform: translateX(4px);
+    }
+
+    .autocomplete-item .item-meta {
+      font-size: 11.5px;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .autocomplete-item .item-badge {
+      font-size: 10.5px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.06);
+    }
+
+    .autocomplete-item .item-badge.alert {
+      background: rgba(239, 68, 68, 0.12);
+      color: #dc2626;
+    }
+
+    .autocomplete-item .highlight {
+      color: var(--apple-blue);
+      font-weight: 800;
+      text-decoration: underline;
+    }
+
     .ios-btn {
       padding: 12px 22px;
       border: none;
@@ -850,9 +920,13 @@
             id="searchInput" 
             class="glass-input" 
             placeholder="지역명 검색 (예: 영양군, 신안군, 태백시, 의성군, 정선군)"
-            onkeypress="if(event.key === 'Enter') handleSearch()"
+            oninput="handleInputAutocomplete(this.value)"
+            onkeydown="handleKeyNavigation(event)"
+            onfocus="handleInputAutocomplete(this.value)"
+            autocomplete="off"
             autofocus
           />
+          <div id="autocompleteList" class="autocomplete-list"></div>
         </div>
         <button class="ios-btn btn-apple-blue" onclick="handleSearch()">검색</button>
         <button class="ios-btn btn-apple-glass" onclick="resetMap()">전국 초기화</button>
@@ -1269,11 +1343,13 @@
 
     function quickSearch(keyword) {
       document.getElementById('searchInput').value = keyword;
+      closeAutocomplete();
       handleSearch();
     }
 
     function resetMap() {
       document.getElementById('searchInput').value = '';
+      closeAutocomplete();
       document.getElementById('resultInfo').style.display = 'none';
       if (searchMarker) {
         map.removeLayer(searchMarker);
@@ -1416,6 +1492,123 @@
       };
       showResult(`${catIcons[cat]} <b>${catNames[cat]} 소외</b> 취약 지자체 <b>${matched.length}개</b> 표시 중 — 마커를 클릭하면 상세 정보를 볼 수 있습니다`, true);
     }
+
+    // ── 실시간 자동완성 추천 검색 기능 ──
+    let selectedAutocompleteIdx = -1;
+
+    function handleInputAutocomplete(val) {
+      const listEl = document.getElementById('autocompleteList');
+      const query = val.trim().toLowerCase();
+      selectedAutocompleteIdx = -1;
+
+      if (!query) {
+        listEl.style.display = 'none';
+        listEl.innerHTML = '';
+        return;
+      }
+
+      // 이름 및 키워드 기반 매칭 (최대 7개)
+      const matches = allRegions.filter(item => {
+        return item.name.toLowerCase().includes(query) || 
+               item.keywords.some(k => k.toLowerCase().includes(query));
+      }).slice(0, 7);
+
+      if (matches.length === 0) {
+        listEl.innerHTML = `
+          <div style="padding: 10px 14px; font-size: 13px; color: #86868b; text-align: center;">
+            일치하는 지역이 없습니다
+          </div>
+        `;
+        listEl.style.display = 'block';
+        return;
+      }
+
+      const html = matches.map((m, idx) => {
+        // 검색어 하이라이트
+        const regex = new RegExp(`(${query})`, 'gi');
+        const highlightedName = m.name.replace(regex, '<span class="highlight">$1</span>');
+        const popFormatted = m.pop >= 10000 
+          ? (m.pop / 10000).toFixed(1) + '만' 
+          : m.pop.toLocaleString();
+        const isAlert = m.infraStatus === '심각' || m.infraStatus === '위험';
+
+        return `
+          <div class="autocomplete-item" data-idx="${idx}" onclick="selectAutocomplete('${m.name}')">
+            <span>📍 ${highlightedName}</span>
+            <div class="item-meta">
+              ${m.infraStatus ? `<span class="item-badge ${isAlert ? 'alert' : ''}">${m.infraStatus}</span>` : ''}
+              <span>${popFormatted}명</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      listEl.innerHTML = html;
+      listEl.style.display = 'block';
+    }
+
+    function selectAutocomplete(name) {
+      const input = document.getElementById('searchInput');
+      input.value = name;
+      closeAutocomplete();
+      handleSearch();
+    }
+
+    function closeAutocomplete() {
+      const listEl = document.getElementById('autocompleteList');
+      if (listEl) {
+        listEl.style.display = 'none';
+        listEl.innerHTML = '';
+      }
+      selectedAutocompleteIdx = -1;
+    }
+
+    function handleKeyNavigation(e) {
+      const listEl = document.getElementById('autocompleteList');
+      const items = listEl.querySelectorAll('.autocomplete-item');
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (items.length === 0) return;
+        selectedAutocompleteIdx = (selectedAutocompleteIdx + 1) % items.length;
+        updateItemHighlight(items);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (items.length === 0) return;
+        selectedAutocompleteIdx = (selectedAutocompleteIdx - 1 + items.length) % items.length;
+        updateItemHighlight(items);
+      } else if (e.key === 'Enter') {
+        if (selectedAutocompleteIdx >= 0 && items[selectedAutocompleteIdx]) {
+          e.preventDefault();
+          items[selectedAutocompleteIdx].click();
+        } else {
+          closeAutocomplete();
+          handleSearch();
+        }
+      } else if (e.key === 'Escape') {
+        closeAutocomplete();
+      }
+    }
+
+    function updateItemHighlight(items) {
+      items.forEach((item, idx) => {
+        if (idx === selectedAutocompleteIdx) {
+          item.classList.add('selected');
+          item.scrollIntoView({ block: 'nearest' });
+          // 입력창 텍스트 미리보기 (옵션)
+        } else {
+          item.classList.remove('selected');
+        }
+      });
+    }
+
+    // 바깥 클릭 시 드롭다운 닫기
+    document.addEventListener('click', (e) => {
+      const dock = document.querySelector('.search-glass-pill');
+      if (dock && !dock.contains(e.target)) {
+        closeAutocomplete();
+      }
+    });
   </script>
 </body>
 </html>
