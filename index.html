@@ -909,13 +909,25 @@
       attribution: '&copy; OpenStreetMap contributors'
     });
 
+    // 대한민국 영토 전용 경계 좌표 (남단 마라도~북단 휴전선, 서단 백령도~동단 독도)
+    const koreaBounds = L.latLngBounds(
+      [33.0, 124.5], // 남서단 (마라도 남측 해역, 백령도 서측)
+      [38.7, 131.9]  // 북동단 (휴전선 접경 북측, 독도 동측)
+    );
+
     const map = L.map('map', {
-      center: [36.0, 127.8],
+      center: [35.9, 127.8],
       zoom: 7,
-      minZoom: 6,
+      minZoom: 6.8,
       maxZoom: 20,
+      zoomSnap: 0.2,
+      maxBounds: koreaBounds,
+      maxBoundsViscosity: 1.0, // 대한민국 영역 밖으로 화면 이탈 100% 방지 및 탄성 고정
       layers: [googleCleanSatelliteLayer]
     });
+
+    // 최초 로드 시 대한민국 전역에 완벽히 맞춤
+    map.fitBounds(koreaBounds);
 
     // 베이스 레이어 전환 컨트롤
     const baseMaps = {
