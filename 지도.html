@@ -1690,7 +1690,65 @@
 
         showResult(`📍 <b>${found.name}</b> [등록 인구수: <b>${found.pop.toLocaleString()} 명</b> | 인프라 상태: <span style="color:${found.infraStatus === '심각' ? '#b91c1c' : '#b45309'}">${found.infraStatus || '양호'}</span>]`, true);
       } else {
-        showResult(`❌ <b>'${query}'</b> 검색 결과를 찾을 수 없습니다. (예: 영양군, 신안군, 태백시, 의성군, 무주군 등을 입력해보세요)`, false);
+        // [전국 모든 행정구역(읍·면·동·리) 실시간 주소 지오코딩 폴백 검색]
+        showResult(`🔍 전국 행정구역 DB에서 <b>'${query}'</b> 검색 중...`, true);
+        
+        const geocodeUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&countrycodes=kr&addressdetails=1&limit=1`;
+        
+        fetch(geocodeUrl, { headers: { 'Accept-Language': 'ko' } })
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.length > 0) {
+              const res = data[0];
+              const lat = parseFloat(res.lat);
+              const lon = parseFloat(res.lon);
+              const displayName = res.display_name.split(',').reverse().slice(1).join(' ').trim() || res.display_name;
+              const addr = res.address || {};
+              const townName = addr.suburb || addr.quarter || addr.village || addr.town || addr.borough || addr.city_district || query;
+
+              map.flyTo([lat, lon], 14, { duration: 1.2 });
+
+              const badgeHtml = `
+                <div class="pop-marker-badge" title="${displayName} 상세 보기">
+                  <span class="badge-region">📍 ${townName}</span>
+                  <span class="badge-action">행정구역 ›</span>
+                </div>
+              `;
+
+              const customIcon = L.divIcon({
+                className: 'pop-custom-div-icon',
+                html: badgeHtml,
+                iconSize: [0, 0]
+              });
+
+              searchMarker = L.marker([lat, lon], { icon: customIcon }).addTo(map);
+
+              const popupHtml = `
+                <div class="pop-card">
+                  <div class="pop-header">
+                    <h3>📍 ${townName}</h3>
+                  </div>
+                  <div class="stat-badge">
+                    <span>행정구역:</span>
+                    <span class="num">${displayName.split(' ').slice(0, 3).join(' ')}</span>
+                  </div>
+                  <p class="desc" style="margin-top:8px; font-size:12.5px; line-height:1.5; color:#374151;">
+                    대한민국 행정구역 좌표: 위도 ${lat.toFixed(4)}, 경도 ${lon.toFixed(4)}<br>
+                    <span style="font-size:11.5px; color:#6b7280;">전체 주소: ${displayName}</span>
+                  </p>
+                </div>
+              `;
+              searchMarker.bindPopup(popupHtml).openPopup();
+
+              showResult(`📍 <b>${displayName}</b> 위치로 이동했습니다.`, true);
+            } else {
+              showResult(`❌ <b>'${query}'</b> 검색 결과를 찾을 수 없습니다. (시·군·구 또는 읍·면·동·리 명칭을 정확히 입력해주세요)`, false);
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            showResult(`❌ <b>'${query}'</b> 검색 결과를 찾을 수 없습니다. (시·군·구 또는 읍·면·동·리 명칭을 정확히 입력해주세요)`, false);
+          });
       }
     }
 
