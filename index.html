@@ -1121,7 +1121,7 @@
             type="text" 
             id="searchInput" 
             class="glass-input" 
-            placeholder="지역명 검색 (예: 영양군, 신안군, 태백시, 의성군, 정선군)"
+            placeholder="시·군·구·읍·면·동 검색 (예: 화도읍, 사북읍, 흑산면, 역삼동, 와산리)"
             oninput="handleInputAutocomplete(this.value)"
             onkeydown="handleKeyNavigation(event)"
             onfocus="handleInputAutocomplete(this.value)"
@@ -1440,10 +1440,49 @@
       { name: "전남 보성군", keywords: ["보성", "보성군"], lat: 34.7715, lng: 127.0799, pop: 38200, desc: "1차 농어업 편중으로 20~30대 양질의 제조업·IT 청년 일자리 전무", level: 12, infraStatus: "위험", job: "제조업 전무 / 농어업 편중 청년 일자리 부재", score: "취약도 84/100" },
       { name: "경북 영천시", keywords: ["영천", "영천시"], lat: 35.9733, lng: 128.9386, pop: 101000, desc: "대구·포항 배후 산단 노후화 및 첨단산업 유치 부진으로 청년층 인구 역외 유출", level: 12, infraStatus: "주의", job: "전통 뿌리산단 노후화 / 미래신산업 부족", score: "취약도 72/100" },
 
-      // [대표 읍·면·동·리]
-      { name: "경기 남양주시 화도읍", keywords: ["화도읍", "화도"], lat: 37.6653, lng: 127.3075, pop: 114500, desc: "수도권 최대 읍으로 대중교통·출퇴근 광역인프라 확충 진행 중", level: 14, infraStatus: "양호", medical: "수도권 종합병원 접근 용이", traffic: "경춘선 및 광역버스망", score: "인프라 풍부" },
-      { name: "제주 제주시 조천읍", keywords: ["조천읍", "조천"], lat: 33.5358, lng: 126.6344, pop: 25800, desc: "제주 동부 전원 주거 읍. 제주시 도심 인프라 30분 생활권", level: 14, infraStatus: "양호", medical: "제주대병원 연계", traffic: "일주동로 연계", score: "인프라 보통" },
-      { name: "서울 강남구 역삼동", keywords: ["역삼동", "역삼"], lat: 37.5007, lng: 127.0368, pop: 74200, desc: "전국 최고 수준의 의료·지하철·금융·상업 인프라 집중 지역", level: 14, infraStatus: "최상", medical: "강남세브란스 등 3차병원 밀집", traffic: "지하철 2호선/신분당선", score: "인프라 최상" },
+      // [대표 읍·면·동·리 정밀 분석 데이터베이스]
+      // 수도권 주요 읍·면·동
+      { name: "서울 강남구 역삼동", keywords: ["역삼동", "역삼", "테헤란로"], lat: 37.5007, lng: 127.0368, pop: 74200, desc: "전국 최고 수준의 의료·지하철·금융·상업 인프라 집중 지역", level: 14, infraStatus: "최상", medical: "강남세브란스 등 3차병원 밀집", traffic: "지하철 2호선/신분당선", score: "인프라 최상" },
+      { name: "서울 종로구 가회동", keywords: ["가회동", "북촌", "삼청동"], lat: 37.5828, lng: 126.9838, pop: 4100, desc: "북촌한옥마을 전통 문화 주거지구", level: 15, infraStatus: "양호", medical: "서울대병원 접근 용이", traffic: "안국역 연계", score: "문화 인프라 풍부" },
+      { name: "서울 마포구 서교동", keywords: ["서교동", "홍대입구", "합정"], lat: 37.5534, lng: 126.9205, pop: 27800, desc: "홍대 젊음의 거리 중심 청년 문화·상권 밀집지", level: 15, infraStatus: "양호", culture: "공연장·전시 복합상권", traffic: "2호선·공항철도", score: "문화/상권 최상" },
+      { name: "경기 남양주시 화도읍", keywords: ["화도읍", "화도", "마석"], lat: 37.6653, lng: 127.3075, pop: 114500, desc: "전국 최대 인구 읍. 수도권 동부 광역교통 확충 진행 중", level: 14, infraStatus: "양호", medical: "수도권 종합병원 접근 용이", traffic: "경춘선 마석역 및 광역버스망", score: "인프라 풍부" },
+      { name: "경기 화성시 봉담읍", keywords: ["봉담읍", "봉담"], lat: 37.2185, lng: 126.9458, pop: 89000, desc: "대학교 및 신축 택지지구 밀집 급성장 읍", level: 14, infraStatus: "양호", traffic: "수인분당선 오목천역 연계", education: "협성대·장안대 인근", score: "정주여건 양호" },
+      { name: "경기 양평군 용문면", keywords: ["용문면", "용문", "용문산"], lat: 37.4988, lng: 127.5878, pop: 18500, desc: "경의중앙선 종점 관광·전원주거 면. 면 단위 인프라 양호", level: 14, infraStatus: "보통", traffic: "경의중앙선 용문역", living: "전원 상권", score: "교통 양호" },
+      { name: "경기 파주시 문산읍", keywords: ["문산읍", "문산", "임진각"], lat: 37.8583, lng: 126.7845, pop: 49000, desc: "경의선 북단 접경 거점 읍. 통일로 및 철도 종점권", level: 14, infraStatus: "주의", traffic: "경의선 전철 문산역", fire: "접경지 소방 대응", score: "접경 거점" },
+
+      // 강원권 산간·해안 읍·면·리
+      { name: "강원 정선군 사북읍", keywords: ["사북읍", "사북", "강원랜드"], lat: 37.2285, lng: 128.8188, pop: 4800, desc: "폐광지 대체산업 강원랜드 배후 읍. 산악 협곡 고립형 지형", level: 14, infraStatus: "위험", medical: "응급의료 취약지", traffic: "태백선 사북역 / 산악 험로", living: "상권 축소", score: "취약도 85/100" },
+      { name: "강원 정선군 고한읍", keywords: ["고한읍", "고한", "하이원"], lat: 37.2023, lng: 128.8523, pop: 4400, desc: "해발 700m 고지대 읍. 겨울철 결빙 및 폭설 교통 취약", level: 14, infraStatus: "위험", energy: "혹한기 난방부담 극심", medical: "전문의 부재", score: "취약도 86/100" },
+      { name: "강원 평창군 대관령면", keywords: ["대관령면", "대관령", "횡계"], lat: 37.6742, lng: 128.7118, pop: 6100, desc: "해발 800m 고원지대. 동계스포츠 메카이나 혹한기 생활인프라 주의", level: 14, infraStatus: "주의", traffic: "KTX 진부역 연계", energy: "겨울철 난방 취약", score: "산간 고원" },
+      { name: "강원 삼척시 원덕읍", keywords: ["원덕읍", "원덕", "호산항"], lat: 37.1812, lng: 129.3375, pop: 5100, desc: "삼척 남단 경북 경계 읍. LNG 생산기지 입지이나 생활·의료 인프라 원거리", level: 14, infraStatus: "위험", medical: "종합병원 이송 40분", fire: "산불·해안방재 취약", score: "취약도 80/100" },
+      { name: "강원 화천군 사내면", keywords: ["사내면", "사내", "사창리"], lat: 38.0772, lng: 127.5255, pop: 6300, desc: "군부대 해체(27사단) 이후 인구 급감 및 상권 붕괴 위기 면", level: 14, infraStatus: "위험", living: "군인 상권 붕괴 / 식료품 접근 취약", traffic: "산악 험로", score: "취약도 84/100" },
+
+      // 충청권 읍·면
+      { name: "충남 서산시 대산읍", keywords: ["대산읍", "대산", "대산공단"], lat: 36.9388, lng: 126.4312, pop: 13500, desc: "국내 3대 석유화학공단 배후 읍. 대형 중화학 산단 대비 응급의료·대중교통 부족", level: 14, infraStatus: "주의", fire: "산단 화학재해 위험", traffic: "철도 미경유 / 국도 정체", score: "산단형 읍" },
+      { name: "충남 태안군 안면읍", keywords: ["안면읍", "안면도", "방포"], lat: 36.5684, lng: 126.3533, pop: 8900, desc: "안면도 중심 읍. 관광 인프라 양호하나 비수기 의료·복지 사각", level: 14, infraStatus: "위험", medical: "응급실 원거리", traffic: "도서 연륙형 도로 의존", score: "취약도 79/100" },
+      { name: "충북 단양군 매포읍", keywords: ["매포읍", "매포", "도담삼봉"], lat: 37.0425, lng: 128.3242, pop: 5400, desc: "시멘트 산업 분지 읍. 분진 환경 취약 및 고령화 심각", level: 14, infraStatus: "위험", environment: "분진 환경 취약", education: "학생수 급감", score: "취약도 81/100" },
+      { name: "충북 영동군 추풍령면", keywords: ["추풍령면", "추풍령"], lat: 36.2165, lng: 127.9942, pop: 2200, desc: "백두대간 고갯마루 면. 경부선 간이역 소재하나 생활상권 소멸", level: 14, infraStatus: "위험", living: "생필품 상점 축소", medical: "보건지소 의존", score: "취약도 83/100" },
+
+      // 전라권 도서·산간 읍·면·리
+      { name: "전남 신안군 흑산면", keywords: ["흑산면", "흑산도", "홍도"], lat: 34.6836, lng: 125.4355, pop: 3800, desc: "목포항에서 뱃길 2시간 먼바다 도서 면. 기상 악화 시 완전 고립 위험", level: 13, infraStatus: "심각", medical: "응급헬기 의존 / 골든타임 2시간", traffic: "풍랑주의보 잦은 결항", water: "식수 해수담수화 의존", score: "취약도 97/100" },
+      { name: "전남 완도군 보길면", keywords: ["보길면", "보길도", "세연정"], lat: 34.1523, lng: 126.5518, pop: 2600, desc: "고산 윤선도 유적 도서 면. 상습 가뭄으로 제한급수 빈발", level: 14, infraStatus: "심각", water: "도서 가뭄 극심 / 간이급수", medical: "공중보건의 1인 의존", score: "취약도 93/100" },
+      { name: "전남 구례군 산동면", keywords: ["산동면", "산동", "지리산온천"], lat: 35.3188, lng: 127.4725, pop: 3100, desc: "지리산 서북능선 산간 분지 면. 산수유 마을이나 겨울철 응급이송 곤란", level: 14, infraStatus: "위험", medical: "야간 응급 진료 불가", fire: "산악 화재 취약", score: "취약도 84/100" },
+      { name: "전북 무주군 설천면", keywords: ["설천면", "설천", "무주리조트"], lat: 35.9612, lng: 127.7785, pop: 4100, desc: "덕유산국립공원 배후 면. 스키 관광지이나 면 주민 정주 의료 인프라 미비", level: 14, infraStatus: "위험", medical: "3차병원 이동 1시간 이상", energy: "산간 고비용 난방", score: "취약도 82/100" },
+      { name: "전북 순창군 복흥면", keywords: ["복흥면", "복흥", "추령"], lat: 35.4523, lng: 126.9325, pop: 2300, desc: "노령산맥 산간 고원 면. 겨울철 폭설 고립 잦고 버스 배차간격 김", level: 14, infraStatus: "위험", traffic: "대중교통 1일 3~4회", welfare: "독거노인 비율 45%", score: "취약도 85/100" },
+
+      // 경상권 산간·도서 읍·면·리
+      { name: "경북 울릉군 울릉읍", keywords: ["울릉읍", "도동", "저동"], lat: 37.4842, lng: 130.9035, pop: 6500, desc: "울릉도 중심 읍. 여객선 터미널 소재하나 의료·고등교육 본토 의존", level: 14, infraStatus: "심각", medical: "울릉군의료원 전문의 부족", culture: "영화관·공연장 부재", score: "취약도 94/100" },
+      { name: "경북 울릉군 북면", keywords: ["북면", "천부리", "나리분지"], lat: 37.5285, lng: 130.8712, pop: 1350, desc: "울릉도 북측 해안 및 나리분지 면. 본토 연결 및 응급의료 극도 취약", level: 14, infraStatus: "심각", traffic: "일주도로 낙석 위험", digital: "일부 해안 통신 음영", score: "취약도 96/100" },
+      { name: "경북 영양군 수비면", keywords: ["수비면", "수비", "국제밤하늘보호공원"], lat: 36.7825, lng: 129.2155, pop: 1600, desc: "아시아 최초 국제밤하늘보호공원 산간 면. 빛공해 제로이나 생필품·의료 사막지대", level: 14, infraStatus: "심각", medical: "약국·의원 전무", living: "슈퍼마켓 부재 / 식료품 사막화", score: "취약도 95/100" },
+      { name: "경북 청송군 주왕산면", keywords: ["주왕산면", "주왕산"], lat: 36.3812, lng: 129.1352, pop: 1800, desc: "주왕산국립공원 산간 면. 초고령화(50% 육박)로 재가돌봄 시급", level: 14, infraStatus: "위험", welfare: "돌봄인력 태부족", traffic: "버스 노선 축소", score: "취약도 88/100" },
+      { name: "경남 하동군 화개면", keywords: ["화개면", "화개장터", "쌍계사"], lat: 35.1952, lng: 127.6045, pop: 3200, desc: "지리산 남부 섬진강 계곡 면. 관광철 교통혼잡 대비 평시 의료 취약", level: 14, infraStatus: "위험", medical: "순천/진주 병원 의존", fire: "산악 급경사 화재 취약", score: "취약도 81/100" },
+      { name: "경남 거창군 고제면", keywords: ["고제면", "고제", "삼봉산"], lat: 35.8015, lng: 127.8845, pop: 1380, desc: "덕유산 자락 고랭지 사과 산간 면. 학령인구 소멸로 폐교 위기", level: 14, infraStatus: "위험", education: "초등학교 전교생 10명 미만", welfare: "고령 독거가구 다수", score: "취약도 86/100" },
+
+      // 제주권 읍·면·리
+      { name: "제주 제주시 조천읍", keywords: ["조천읍", "조천", "함덕"], lat: 33.5358, lng: 126.6344, pop: 25800, desc: "제주 동부 전원 주거 읍. 제주시 도심 인프라 30분 생활권", level: 14, infraStatus: "양호", medical: "제주대병원 연계", traffic: "일주동로 연계", score: "인프라 보통" },
+      { name: "제주 서귀포시 대정읍", keywords: ["대정읍", "대정", "모슬포", "영어교육도시"], lat: 33.2268, lng: 126.2514, pop: 24000, desc: "영어교육도시 및 모슬포항 소재 서남부 거점 읍", level: 14, infraStatus: "양호", education: "국제학교 밀집", traffic: "모슬포 연계", score: "교육 인프라 특화" },
+      { name: "제주 서귀포시 성산읍", keywords: ["성산읍", "성산", "성산일출봉"], lat: 33.3855, lng: 126.8788, pop: 15500, desc: "성산일출봉 관광 거점 읍. 제주시/서귀포시 도심에서 1시간 소요", level: 14, infraStatus: "주의", medical: "응급의료센터 원거리", traffic: "동부 순환버스 의존", score: "동부 관광 거점" },
+      { name: "제주 제주시 추자면", keywords: ["추자면", "추자도", "상추자"], lat: 33.9585, lng: 126.2975, pop: 1600, desc: "제주 본섬과 전남 해남 사이 절해고도 면. 기상 악화 시 해상교통 두절", level: 13, infraStatus: "심각", medical: "응급환자 해경경비정/헬기 이송", traffic: "여객선 결항 빈발", score: "취약도 95/100" },
       { name: "제주 조천읍 와산리", keywords: ["와산리", "와산"], lat: 33.4912, lng: 126.6578, pop: 1080, desc: "중산간 농촌 마을로 대중교통 배차간격 길어 자가용 필수", level: 15, infraStatus: "주의", medical: "조천보건지소 의존", traffic: "순환 버스 의존", score: "교통 소외" }
     ];
 
