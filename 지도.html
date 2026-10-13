@@ -219,56 +219,92 @@
       backdrop-filter: blur(16px);
       border: 1px solid var(--glass-border-subtle);
       border-radius: 20px;
-      max-height: 600px;
-      overflow: hidden;
-      transition: max-height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-                  padding 0.4s ease,
-                  opacity 0.3s ease;
     }
 
-    .glass-chips-bar.collapsed {
-      max-height: 0;
-      padding: 0 18px;
-      opacity: 0;
-      border-color: transparent;
-      pointer-events: none;
-    }
-
-    .chips-toggle-btn {
+    /* 카테고리 필터 탭 바 */
+    .infra-filter-bar {
       display: flex;
       align-items: center;
       gap: 6px;
-      margin: 0 auto;
-      padding: 8px 20px;
-      background: rgba(255, 255, 255, 0.75);
+      flex-wrap: wrap;
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.5);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1.5px solid var(--glass-border);
+      border: 1px solid var(--glass-border-subtle);
+      border-radius: 20px;
+    }
+
+    .filter-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 7px 14px;
       border-radius: 30px;
-      font-size: 13px;
+      border: 1.5px solid rgba(0,0,0,0.08);
+      background: rgba(255,255,255,0.7);
+      font-size: 12.5px;
       font-weight: 700;
-      color: var(--apple-blue);
+      color: #6b7280;
       cursor: pointer;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
       transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      white-space: nowrap;
     }
 
-    .chips-toggle-btn:hover {
-      background: var(--apple-blue);
+    .filter-tab:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .filter-tab.active {
       color: #fff;
-      border-color: var(--apple-blue);
-      transform: scale(1.04);
-      box-shadow: 0 6px 20px rgba(0, 122, 255, 0.3);
+      border-color: transparent;
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
     }
 
-    .chips-toggle-btn .toggle-arrow {
-      display: inline-block;
-      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      font-size: 14px;
+    .filter-tab[data-cat="medical"].active   { background: #dc2626; }
+    .filter-tab[data-cat="traffic"].active    { background: #ea580c; }
+    .filter-tab[data-cat="education"].active  { background: #4338ca; }
+    .filter-tab[data-cat="culture"].active    { background: #7c3aed; }
+    .filter-tab[data-cat="fire"].active       { background: #c2410c; }
+    .filter-tab[data-cat="welfare"].active    { background: #0f766e; }
+    .filter-tab[data-cat="digital"].active    { background: #0e7490; }
+    .filter-tab[data-cat="danger"].active     { background: #4b5563; }
+
+    /* 인프라 패널 (칩 목록) */
+    .infra-panel {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      padding: 0 18px;
+      transition: max-height 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  opacity 0.3s ease,
+                  padding 0.35s ease;
     }
 
-    .chips-toggle-btn.active .toggle-arrow {
-      transform: rotate(180deg);
+    .infra-panel.open {
+      max-height: 200px;
+      opacity: 1;
+      padding: 10px 18px;
+    }
+
+    .infra-chip-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: rgba(255,255,255,0.45);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border-subtle);
+      border-radius: 18px;
+      padding: 10px 16px;
+      animation: chipSlideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes chipSlideIn {
+      0% { opacity: 0; transform: translateY(-8px) scale(0.97); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .chip-label {
@@ -823,65 +859,89 @@
       </div>
     </header>
 
-    <button class="chips-toggle-btn active" id="chipsToggle" onclick="toggleChips()">
-      📋 인프라 취약지역 목록
-      <span class="toggle-arrow">▼</span>
-    </button>
+    <!-- 인프라 카테고리 필터 탭 -->
+    <nav class="infra-filter-bar">
+      <button class="filter-tab" data-cat="medical"  onclick="filterInfra('medical')">🚨 응급의료</button>
+      <button class="filter-tab" data-cat="traffic"   onclick="filterInfra('traffic')">🚆 교통/철도</button>
+      <button class="filter-tab" data-cat="education" onclick="filterInfra('education')">📚 교육</button>
+      <button class="filter-tab" data-cat="culture"   onclick="filterInfra('culture')">🎭 문화/체육</button>
+      <button class="filter-tab" data-cat="fire"      onclick="filterInfra('fire')">🚒 소방/안전</button>
+      <button class="filter-tab" data-cat="welfare"   onclick="filterInfra('welfare')">🏠 복지/돌봄</button>
+      <button class="filter-tab" data-cat="digital"   onclick="filterInfra('digital')">📡 통신/디지털</button>
+      <button class="filter-tab" data-cat="danger"    onclick="filterInfra('danger')">📉 소멸위험</button>
+    </nav>
 
-    <section class="glass-chips-bar collapsed" id="chipsBar">
-      <span class="chip-label" style="color: #dc2626;">🚨 응급의료 소외:</span>
-      <button class="ios-chip alert" onclick="quickSearch('영양군')">경북 영양군 (응급의료원 부재)</button>
-      <button class="ios-chip alert" onclick="quickSearch('신안군')">전남 신안군 (도서 응급이송 취약)</button>
-      <button class="ios-chip alert" onclick="quickSearch('태백시')">강원 태백시 (필수의료 붕괴 위기)</button>
-      <button class="ios-chip alert" onclick="quickSearch('구례군')">전남 구례군 (분만·소아과 부재)</button>
+    <!-- 카테고리별 패널 -->
+    <div class="infra-panel" id="panel-medical">
+      <div class="infra-chip-group">
+        <span class="chip-label" style="color:#dc2626;">🚨 응급의료 소외 지자체</span>
+        <button class="ios-chip alert" onclick="quickSearch('영양군')">경북 영양군 (응급의료원 부재)</button>
+        <button class="ios-chip alert" onclick="quickSearch('신안군')">전남 신안군 (도서 응급이송 취약)</button>
+        <button class="ios-chip alert" onclick="quickSearch('태백시')">강원 태백시 (필수의료 붕괴 위기)</button>
+        <button class="ios-chip alert" onclick="quickSearch('구례군')">전남 구례군 (분만·소아과 부재)</button>
+      </div>
+    </div>
 
-      <span class="chip-divider"></span>
+    <div class="infra-panel" id="panel-traffic">
+      <div class="infra-chip-group">
+        <span class="chip-label" style="color:#ea580c;">🚆 교통/철도 소외 지자체</span>
+        <button class="ios-chip alert" onclick="quickSearch('청송군')">경북 청송군 (고속철도/국도 소외)</button>
+        <button class="ios-chip alert" onclick="quickSearch('양구군')">강원 양구군 (산간 접경 오지)</button>
+        <button class="ios-chip alert" onclick="quickSearch('무주군')">전북 무주군 (내륙 산간 교통취약)</button>
+      </div>
+    </div>
 
-      <span class="chip-label" style="color: #ea580c;">🚆 교통/철도 소외:</span>
-      <button class="ios-chip alert" onclick="quickSearch('청송군')">경북 청송군 (고속철도/국도 소외)</button>
-      <button class="ios-chip alert" onclick="quickSearch('양구군')">강원 양구군 (산간 접경 오지)</button>
-      <button class="ios-chip alert" onclick="quickSearch('무주군')">전북 무주군 (내륙 산간 교통취약)</button>
+    <div class="infra-panel" id="panel-education">
+      <div class="infra-chip-group">
+        <span class="chip-label" style="color:#4338ca;">📚 교육 소외 지자체</span>
+        <button class="ios-chip" onclick="quickSearch('임실군')">전북 임실군 (고교 1개교)</button>
+        <button class="ios-chip" onclick="quickSearch('장수군')">전북 장수군 (학원 전무)</button>
+        <button class="ios-chip" onclick="quickSearch('봉화군')">경북 봉화군 (대학교 전무)</button>
+      </div>
+    </div>
 
-      <span class="chip-divider"></span>
+    <div class="infra-panel" id="panel-culture">
+      <div class="infra-chip-group">
+        <span class="chip-label" style="color:#7c3aed;">🎭 문화/체육 소외 지자체</span>
+        <button class="ios-chip" onclick="quickSearch('울릉군')">경북 울릉군 (문화시설 전무)</button>
+        <button class="ios-chip" onclick="quickSearch('영덕군')">경북 영덕군 (공연장 부재)</button>
+        <button class="ios-chip" onclick="quickSearch('진안군')">전북 진안군 (체육관 부재)</button>
+      </div>
+    </div>
 
-      <span class="chip-label" style="color: #4338ca;">📚 교육 소외:</span>
-      <button class="ios-chip" onclick="quickSearch('임실군')">전북 임실군 (고교 1개교)</button>
-      <button class="ios-chip" onclick="quickSearch('장수군')">전북 장수군 (학원 전무)</button>
-      <button class="ios-chip" onclick="quickSearch('봉화군')">경북 봉화군 (대학교 전무)</button>
+    <div class="infra-panel" id="panel-fire">
+      <div class="infra-chip-group">
+        <span class="chip-label" style="color:#c2410c;">🚒 소방/안전 소외 지자체</span>
+        <button class="ios-chip alert" onclick="quickSearch('옹진군')">인천 옹진군 (도서지역 골든타임 초과)</button>
+        <button class="ios-chip alert" onclick="quickSearch('횡성군')">강원 횡성군 (소방서 원거리)</button>
+      </div>
+    </div>
 
-      <span class="chip-divider"></span>
+    <div class="infra-panel" id="panel-welfare">
+      <div class="infra-chip-group">
+        <span class="chip-label" style="color:#0f766e;">🏠 복지/돌봄 소외 지자체</span>
+        <button class="ios-chip" onclick="quickSearch('군위군')">대구 군위군 (노인돌봄 인력부족)</button>
+        <button class="ios-chip" onclick="quickSearch('함양군')">경남 함양군 (어린이집 감소)</button>
+      </div>
+    </div>
 
-      <span class="chip-label" style="color: #7c3aed;">🎭 문화/체육 소외:</span>
-      <button class="ios-chip" onclick="quickSearch('울릉군')">경북 울릉군 (문화시설 전무)</button>
-      <button class="ios-chip" onclick="quickSearch('영덕군')">경북 영덕군 (공연장 부재)</button>
-      <button class="ios-chip" onclick="quickSearch('진안군')">전북 진안군 (체육관 부재)</button>
+    <div class="infra-panel" id="panel-digital">
+      <div class="infra-chip-group">
+        <span class="chip-label" style="color:#0e7490;">📡 통신/디지털 소외 지자체</span>
+        <button class="ios-chip" onclick="quickSearch('영월군')">강원 영월군 (5G 음영지역)</button>
+        <button class="ios-chip" onclick="quickSearch('화순군')">전남 화순군 (디지털 접근성 취약)</button>
+      </div>
+    </div>
 
-      <span class="chip-divider"></span>
-
-      <span class="chip-label" style="color: #c2410c;">🚒 소방/안전 소외:</span>
-      <button class="ios-chip alert" onclick="quickSearch('옹진군')">인천 옹진군 (도서지역 골든타임 초과)</button>
-      <button class="ios-chip alert" onclick="quickSearch('횡성군')">강원 횡성군 (소방서 원거리)</button>
-
-      <span class="chip-divider"></span>
-
-      <span class="chip-label" style="color: #0f766e;">🏠 복지/돌봄 소외:</span>
-      <button class="ios-chip" onclick="quickSearch('군위군')">대구 군위군 (노인돌봄 인력부족)</button>
-      <button class="ios-chip" onclick="quickSearch('함양군')">경남 함양군 (어린이집 감소)</button>
-
-      <span class="chip-divider"></span>
-
-      <span class="chip-label" style="color: #0e7490;">📡 통신/디지털 소외:</span>
-      <button class="ios-chip" onclick="quickSearch('영월군')">강원 영월군 (5G 음영지역)</button>
-      <button class="ios-chip" onclick="quickSearch('화순군')">전남 화순군 (디지털 접근성 취약)</button>
-
-      <span class="chip-divider"></span>
-
-      <span class="chip-label" style="color: #4b5563;">📉 소멸위험 복합지역:</span>
-      <button class="ios-chip" onclick="quickSearch('의성군')">경북 의성군</button>
-      <button class="ios-chip" onclick="quickSearch('정선군')">강원 정선군</button>
-      <button class="ios-chip" onclick="quickSearch('고흥군')">전남 고흥군</button>
-      <button class="ios-chip" onclick="quickSearch('남원시')">전북 남원시</button>
-    </section>
+    <div class="infra-panel" id="panel-danger">
+      <div class="infra-chip-group">
+        <span class="chip-label" style="color:#4b5563;">📉 소멸위험 복합지역</span>
+        <button class="ios-chip" onclick="quickSearch('의성군')">경북 의성군</button>
+        <button class="ios-chip" onclick="quickSearch('정선군')">강원 정선군</button>
+        <button class="ios-chip" onclick="quickSearch('고흥군')">전남 고흥군</button>
+        <button class="ios-chip" onclick="quickSearch('남원시')">전북 남원시</button>
+      </div>
+    </div>
 
     <div id="resultInfo" class="status-dynamic"></div>
 
@@ -1230,11 +1290,23 @@
       box.innerHTML = html;
     }
 
-    function toggleChips() {
-      const bar = document.getElementById('chipsBar');
-      const btn = document.getElementById('chipsToggle');
-      bar.classList.toggle('collapsed');
-      btn.classList.toggle('active');
+    function filterInfra(cat) {
+      const tabs = document.querySelectorAll('.filter-tab');
+      const panels = document.querySelectorAll('.infra-panel');
+      const clickedTab = document.querySelector(`.filter-tab[data-cat="${cat}"]`);
+      const targetPanel = document.getElementById('panel-' + cat);
+      const isOpen = clickedTab.classList.contains('active');
+
+      // 모든 탭 비활성
+      tabs.forEach(t => t.classList.remove('active'));
+      // 모든 패널 닫기
+      panels.forEach(p => p.classList.remove('open'));
+
+      // 같은 탭 재클릭이면 닫기만 (토글)
+      if (!isOpen) {
+        clickedTab.classList.add('active');
+        targetPanel.classList.add('open');
+      }
     }
   </script>
 </body>
