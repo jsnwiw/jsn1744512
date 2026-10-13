@@ -299,6 +299,39 @@
       color: var(--text-main) !important;
     }
 
+    .pop-marker-badge {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1.5px solid var(--apple-blue);
+      border-radius: 20px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #1d1d1f;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      white-space: nowrap;
+      text-align: center;
+      cursor: pointer;
+      transform: translate(-50%, -50%);
+    }
+
+    .pop-marker-badge.alert {
+      border-color: #ef4444;
+      background: rgba(255, 241, 242, 0.95);
+      color: #b91c1c;
+    }
+
+    .pop-marker-badge span.num {
+      color: var(--apple-blue);
+      font-weight: 800;
+      margin-left: 2px;
+    }
+
+    .pop-marker-badge.alert span.num {
+      color: #ef4444;
+    }
+
     .leaflet-control-layers label {
       display: flex;
       align-items: center;
@@ -692,22 +725,60 @@
       attribution: '&copy; OpenStreetMap contributors'
     });
 
+    // 인구수 표시 오버레이 레이어 생성
+    const populationMarkersLayer = L.layerGroup();
+
+    allRegions.forEach(item => {
+      const isAlert = item.infraStatus === "심각" || item.infraStatus === "위험";
+      const shortName = item.name.split(" ").slice(-1)[0];
+      const popFormatted = item.pop >= 10000 
+        ? (item.pop / 10000).toFixed(1) + "만" 
+        : item.pop.toLocaleString();
+
+      const badgeHtml = `
+        <div class="pop-marker-badge ${isAlert ? 'alert' : ''}" onclick="quickSearch('${item.name}')">
+          ${shortName}<span class="num">${popFormatted}</span>
+        </div>
+      `;
+
+      const customIcon = L.divIcon({
+        className: 'pop-custom-div-icon',
+        html: badgeHtml,
+        iconSize: [0, 0]
+      });
+
+      const marker = L.marker([item.lat, item.lng], { icon: customIcon });
+      marker.bindPopup(`
+        <div class="pop-card">
+          <div class="pop-header"><h3>📍 ${item.name}</h3></div>
+          <div class="stat-badge"><span>등록 인구:</span><span class="num">${item.pop.toLocaleString()}</span><span>명</span></div>
+          ${item.infraStatus ? `<div class="infra-score-bar"><span>인프라 등급:</span><b>${item.infraStatus}</b></div>` : ''}
+          <p class="desc">${item.desc}</p>
+        </div>
+      `);
+      populationMarkersLayer.addLayer(marker);
+    });
+
     const map = L.map('map', {
       center: [36.0, 127.8],
       zoom: 7,
       minZoom: 6,
       maxZoom: 20,
-      layers: [googleKoreanSatLayer]
+      layers: [googleKoreanSatLayer, populationMarkersLayer]
     });
 
-    // 베이스 레이어 전환 컨트롤
+    // 베이스 레이어 & 오버레이 전환 컨트롤
     const baseMaps = {
-      "🛰️ 초고화질 위성 (한국어 도로/지명 완벽 표시)": googleKoreanSatLayer,
+      "🛰️ 초고화질 위성 (한국어 도로/지명)": googleKoreanSatLayer,
       "🌍 Esri 항공 위성 (순수 위성사진)": esriSatelliteLayer,
       "🗺️ 일반 도로 지도": osmLayer
     };
 
-    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+    const overlayMaps = {
+      "👥 인구수 표시 배지": populationMarkersLayer
+    };
+
+    L.control.layers(baseMaps, overlayMaps, { position: 'topright' }).addTo(map);
 
     // 기기 화면 회전 또는 브라우저 창 크기 변경 시 지도 타일 즉시 자동 재배치
     window.addEventListener('resize', () => map.invalidateSize());
