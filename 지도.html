@@ -1279,6 +1279,10 @@
         map.removeLayer(searchMarker);
         searchMarker = null;
       }
+      // 인프라 마커 + 필터 탭 초기화
+      if (infraMarkers) infraMarkers.clearLayers();
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.infra-panel').forEach(p => p.classList.remove('open'));
       map.closePopup();
       map.fitBounds(koreaBounds, { animate: true, duration: 1.0 });
     }
@@ -1290,6 +1294,46 @@
       box.innerHTML = html;
     }
 
+    // 인프라 카테고리별 마커 레이어
+    let infraMarkers = L.layerGroup().addTo(map);
+
+    // 카테고리 → 데이터 필드 매핑
+    const catFieldMap = {
+      medical: 'medical', traffic: 'traffic', education: 'education',
+      culture: 'culture', fire: 'fire', welfare: 'welfare',
+      digital: 'digital', danger: 'infraStatus'
+    };
+
+    function buildPopupHtml(r) {
+      const statusClass = (r.infraStatus === "심각") ? "alert" : (r.infraStatus === "위험" ? "warning" : "");
+      return `
+        <div class="pop-card">
+          <div class="pop-header"><h3>📍 ${r.name}</h3></div>
+          <div class="stat-badge">
+            <span>인구수:</span>
+            <span class="num">${r.pop.toLocaleString()}</span>
+            <span>명</span>
+          </div>
+          ${r.infraStatus ? `
+            <div class="infra-score-bar">
+              <span>인프라 취약등급:</span>
+              <b style="color: ${r.infraStatus === '심각' ? '#ef4444' : (r.infraStatus === '위험' ? '#f59e0b' : '#10b981')}">${r.infraStatus} (${r.score || ''})</b>
+            </div>
+            <div class="infra-tags">
+              ${r.medical ? `<span class="infra-tag ${statusClass}">🏥 ${r.medical}</span>` : ''}
+              ${r.traffic ? `<span class="infra-tag ${statusClass}">🚆 ${r.traffic}</span>` : ''}
+              ${r.education ? `<span class="infra-tag education">📚 ${r.education}</span>` : ''}
+              ${r.culture ? `<span class="infra-tag culture">🎭 ${r.culture}</span>` : ''}
+              ${r.fire ? `<span class="infra-tag fire">🚒 ${r.fire}</span>` : ''}
+              ${r.welfare ? `<span class="infra-tag welfare">🏠 ${r.welfare}</span>` : ''}
+              ${r.digital ? `<span class="infra-tag digital">📡 ${r.digital}</span>` : ''}
+            </div>
+          ` : ''}
+          <p class="desc">${r.desc}</p>
+        </div>
+      `;
+    }
+
     function filterInfra(cat) {
       const tabs = document.querySelectorAll('.filter-tab');
       const panels = document.querySelectorAll('.infra-panel');
@@ -1297,16 +1341,80 @@
       const targetPanel = document.getElementById('panel-' + cat);
       const isOpen = clickedTab.classList.contains('active');
 
-      // 모든 탭 비활성
+      // 모든 탭 비활성 + 패널 닫기
       tabs.forEach(t => t.classList.remove('active'));
-      // 모든 패널 닫기
       panels.forEach(p => p.classList.remove('open'));
 
+      // 기존 인프라 마커 제거
+      infraMarkers.clearLayers();
+      if (searchMarker) { map.removeLayer(searchMarker); searchMarker = null; }
+
       // 같은 탭 재클릭이면 닫기만 (토글)
-      if (!isOpen) {
-        clickedTab.classList.add('active');
-        targetPanel.classList.add('open');
+      if (isOpen) {
+        map.fitBounds(koreaBounds, { animate: true, duration: 0.8 });
+        showResult('', false);
+        document.getElementById('resultInfo').style.display = 'none';
+        return;
       }
+
+      clickedTab.classList.add('active');
+      targetPanel.classList.add('open');
+
+      // 해당 카테고리 데이터 필터링
+      const field = catFieldMap[cat];
+      const matched = allRegions.filter(r => {
+        if (cat === 'danger') return r.infraStatus === '심각' || r.infraStatus === '위험';
+        return r[field] && r.infraStatus;
+      });
+
+      // 마커 생성 + 지도에 추가
+      const bounds = [];
+      const catIcons = {
+        medical: '🚨', traffic: '🚆', education: '📚',
+        culture: '🎭', fire: '🚒', welfare: '🏠',
+        digital: '📡', danger: '📉'
+      };
+      const catColors = {
+        medical: '#dc2626', traffic: '#ea580c', education: '#4338ca',
+        culture: '#7c3aed', fire: '#c2410c', welfare: '#0f766e',
+        digital: '#0e7490', danger: '#4b5563'
+      };
+
+      matched.forEach(r => {
+        const isAlert = r.infraStatus === "심각" || r.infraStatus === "위험";
+        const shortName = r.name.split(" ").slice(-1)[0];
+        const popFormatted = r.pop >= 10000 
+          ? (r.pop / 10000).toFixed(1) + "만" 
+          : r.pop.toLocaleString();
+
+        const badgeHtml = `
+          <div class="pop-marker-badge ${isAlert ? 'alert' : ''}" style="border-color: ${catColors[cat]}">
+            ${catIcons[cat]} ${shortName} <span class="num" style="color: ${catColors[cat]}">${popFormatted}명</span>
+          </div>
+        `;
+
+        const icon = L.divIcon({
+          className: 'pop-custom-div-icon',
+          html: badgeHtml,
+          iconSize: [0, 0]
+        });
+
+        const marker = L.marker([r.lat, r.lng], { icon }).addTo(infraMarkers);
+        marker.bindPopup(buildPopupHtml(r), { maxWidth: 320 });
+        bounds.push([r.lat, r.lng]);
+      });
+
+      // 전체 마커가 보이도록 지도 범위 조정
+      if (bounds.length > 0) {
+        map.fitBounds(bounds, { padding: [50, 50], animate: true, duration: 1.0 });
+      }
+
+      const catNames = {
+        medical: '응급의료', traffic: '교통/철도', education: '교육',
+        culture: '문화/체육', fire: '소방/안전', welfare: '복지/돌봄',
+        digital: '통신/디지털', danger: '소멸위험'
+      };
+      showResult(`${catIcons[cat]} <b>${catNames[cat]} 소외</b> 취약 지자체 <b>${matched.length}개</b> 표시 중 — 마커를 클릭하면 상세 정보를 볼 수 있습니다`, true);
     }
   </script>
 </body>
