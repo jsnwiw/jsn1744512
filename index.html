@@ -23,12 +23,20 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    @keyframes auroraGlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "SF Pro Display", sans-serif;
       background: radial-gradient(circle at 15% 15%, #ffd1ff 0%, transparent 40%),
                   radial-gradient(circle at 85% 20%, #c4e0e5 0%, transparent 45%),
                   radial-gradient(circle at 50% 85%, #d4fc79 0%, transparent 40%),
                   #eef2f7;
+      background-size: 200% 200%;
+      animation: auroraGlow 14s ease infinite;
       background-attachment: fixed;
       color: var(--text-main);
       min-height: 100vh;
@@ -37,6 +45,11 @@
       justify-content: center;
       align-items: center;
       -webkit-font-smoothing: antialiased;
+    }
+
+    @keyframes shellEntrance {
+      0% { opacity: 0; transform: translateY(22px) scale(0.985); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .glass-phone-shell {
@@ -53,6 +66,21 @@
       flex-direction: column;
       gap: 16px;
       position: relative;
+      animation: shellEntrance 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes iconFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    .sf-icon {
+      animation: iconFloat 3.5s ease-in-out infinite;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .sf-icon:hover {
+      transform: rotate(12deg) scale(1.12);
     }
 
     .glass-header {
@@ -294,14 +322,26 @@
       color: var(--text-main) !important;
     }
 
+    @keyframes radarPulse {
+      0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.6), 0 4px 12px rgba(0, 0, 0, 0.15); transform: translate(-50%, -50%) scale(1); }
+      50% { box-shadow: 0 0 0 10px rgba(0, 122, 255, 0), 0 6px 16px rgba(0, 0, 0, 0.2); transform: translate(-50%, -50%) scale(1.04); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0), 0 4px 12px rgba(0, 0, 0, 0.15); transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @keyframes radarPulseAlert {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7), 0 4px 12px rgba(0, 0, 0, 0.15); transform: translate(-50%, -50%) scale(1); }
+      50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0), 0 6px 16px rgba(0, 0, 0, 0.25); transform: translate(-50%, -50%) scale(1.05); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0), 0 4px 12px rgba(0, 0, 0, 0.15); transform: translate(-50%, -50%) scale(1); }
+    }
+
     .pop-marker-badge {
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       border: 1.5px solid var(--apple-blue);
       border-radius: 20px;
-      padding: 3px 8px;
-      font-size: 11px;
+      padding: 4px 10px;
+      font-size: 12px;
       font-weight: 700;
       color: #1d1d1f;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -309,12 +349,14 @@
       text-align: center;
       cursor: pointer;
       transform: translate(-50%, -50%);
+      animation: radarPulse 2.2s infinite ease-in-out;
     }
 
     .pop-marker-badge.alert {
       border-color: #ef4444;
-      background: rgba(255, 241, 242, 0.95);
+      background: rgba(255, 241, 242, 0.96);
       color: #b91c1c;
+      animation: radarPulseAlert 1.8s infinite ease-in-out;
     }
 
     .pop-marker-badge span.num {
@@ -335,6 +377,12 @@
       cursor: pointer;
     }
 
+    @keyframes cardPopBounce {
+      0% { opacity: 0; transform: scale(0.88) translateY(12px); }
+      70% { transform: scale(1.02) translateY(-2px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
     .leaflet-popup-content-wrapper {
       background: rgba(255, 255, 255, 0.82) !important;
       backdrop-filter: blur(24px) saturate(180%) !important;
@@ -343,6 +391,7 @@
       border-radius: 22px !important;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16) !important;
       padding: 6px !important;
+      animation: cardPopBounce 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
     }
 
     .pop-card {
