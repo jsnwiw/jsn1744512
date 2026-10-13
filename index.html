@@ -2472,24 +2472,37 @@
       showResult(`📍 <b>${found.name}</b> 위치로 이동했습니다. [인프라 상태: ${found.infraStatus || '양호'}]`, true);
     }
 
-    // ── 읍·면·동 전문 스마트 실시간 자동완성 추천 엔진 ──
+    // ── 전국 모든 행정구역 읍·면·동·리 스마트 실시간 추천 검색 엔진 ──
     let selectedAutocompleteIdx = -1;
+    let autocompleteDebounceTimer = null;
 
     function handleInputAutocomplete(val) {
       const listEl = document.getElementById('autocompleteList');
-      const query = val.trim().toLowerCase();
+      const query = val.trim();
       selectedAutocompleteIdx = -1;
 
       if (!query) {
         listEl.style.display = 'none';
         listEl.innerHTML = '';
+        if (autocompleteDebounceTimer) clearTimeout(autocompleteDebounceTimer);
         return;
       }
 
-      // 접미사 분석: 사용자가 "읍", "면", "동", "리"를 입력 중인지 판별
-      const cleanQ = query.replace(/\s+/g, '');
+      // 1단계: 로컬 DB(allRegions) 즉시 초고속 추천
+      renderLocalMatches(query);
 
-      // 1. 점수 기반 가중치 매칭 (읍/면/동 명칭 우선 순위 부여)
+      // 2단계: 사용자가 입력을 멈추면(260ms), 전국 3,500+개 모든 읍·면·동·리 실시간 탐색 (Nominatim API)
+      if (autocompleteDebounceTimer) clearTimeout(autocompleteDebounceTimer);
+      autocompleteDebounceTimer = setTimeout(() => {
+        fetchOnlineTownSuggestions(query);
+      }, 260);
+    }
+
+    function renderLocalMatches(query) {
+      const listEl = document.getElementById('autocompleteList');
+      const qLower = query.toLowerCase();
+      const cleanQ = qLower.replace(/\s+/g, '');
+
       const scoredMatches = [];
 
       allRegions.forEach(item => {
@@ -2497,25 +2510,20 @@
         let score = 0;
         let matchType = '시·군·구';
 
-        // 읍/면/동/리 분류 태그 부여
         if (nameLower.includes('읍')) matchType = '읍';
         else if (nameLower.includes('면')) matchType = '면';
         else if (nameLower.includes('동')) matchType = '동';
         else if (nameLower.includes('리')) matchType = '리';
 
-        // 1) 이름이 검색어로 시작하거나 정확히 일치할 때
-        if (nameLower.startsWith(query) || item.keywords.some(k => k.toLowerCase() === query)) {
+        if (nameLower.startsWith(qLower) || item.keywords.some(k => k.toLowerCase() === qLower)) {
           score += 100;
         }
-        // 2) 읍/면/동 단어에 직접 부합할 때
-        if (nameLower.includes(query)) {
+        if (nameLower.includes(qLower)) {
           score += 60;
         }
-        // 3) 키워드에 포함될 때
-        if (item.keywords.some(k => k.toLowerCase().includes(query))) {
+        if (item.keywords.some(k => k.toLowerCase().includes(qLower))) {
           score += 40;
         }
-        // 4) 읍/면/동 단어만 친 경우 (예: "와산" -> "와산리", "물금" -> "물금읍", "노형" -> "노형동")
         if (item.keywords.some(k => k.toLowerCase().startsWith(cleanQ))) {
           score += 50;
         }
@@ -2525,32 +2533,109 @@
         }
       });
 
-      // 점수 높은 순 정렬 후 상위 9개 추천
       scoredMatches.sort((a, b) => b.score - a.score);
       const matches = scoredMatches.slice(0, 9);
 
-      if (matches.length === 0) {
+      if (matches.length > 0) {
+        renderAutocompleteHtml(matches, query, false);
+      } else {
         listEl.innerHTML = `
-          <div style="padding: 12px 14px; font-size: 13px; color: #86868b; text-align: center;">
-            🔍 '<strong>${query}</strong>' 읍·면·동 추천 검색 결과가 없습니다.<br>
-            <span style="font-size:11.5px; color:#9ca3af; margin-top:4px; display:inline-block;">엔터를 누르면 전국 지명 데이터베이스에서 직접 탐색합니다.</span>
+          <div style="padding: 11px 14px; font-size: 13px; color: #6b7280; text-align: center;">
+            <span style="display:inline-block; animation:disasterPulse 1.5s infinite; color:#007aff; margin-right:4px;">🔍</span> 
+            전국 읍·면·동 DB에서 '<strong>${query}</strong>' 탐색 중...
           </div>
         `;
         listEl.style.display = 'block';
-        return;
       }
+    }
+
+    // 전국 모든 읍·면·동(3,500개 이상) 실시간 온라인 추천 쿼리
+    async function fetchOnlineTownSuggestions(query) {
+      const listEl = document.getElementById('autocompleteList');
+      const currentInput = document.getElementById('searchInput').value.trim();
+      if (!currentInput || currentInput !== query) return;
+
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&countrycodes=kr&addressdetails=1&limit=6`;
+        const res = await fetch(url, { headers: { 'Accept-Language': 'ko' } });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data || data.length === 0) return;
+
+        // Nominatim 결과를 읍/면/동 규격으로 변환
+        const onlineMatches = [];
+        data.forEach(item => {
+          const addr = item.address || {};
+          const town = addr.suburb || addr.quarter || addr.village || addr.town || addr.borough || addr.city_district || addr.neighbourhood || '';
+          const cityCounty = addr.county || addr.city || addr.district || '';
+          const province = addr.province || addr.state || '';
+          
+          let fullName = item.display_name.split(',').reverse().slice(1).join(' ').trim();
+          if (!fullName) fullName = `${province} ${cityCounty} ${town}`.trim();
+          
+          let matchType = '읍·면·동';
+          if (town.endsWith('읍') || fullName.includes('읍')) matchType = '읍';
+          else if (town.endsWith('면') || fullName.includes('면')) matchType = '면';
+          else if (town.endsWith('동') || fullName.includes('동')) matchType = '동';
+          else if (town.endsWith('리') || fullName.includes('리')) matchType = '리';
+
+          // 인구수 실시간 산출
+          const popObj = calculateTownPopulation(town || query, fullName, addr);
+
+          onlineMatches.push({
+            item: {
+              name: fullName,
+              pop: popObj.popNum,
+              infraStatus: popObj.infraStatus || '일반'
+            },
+            score: 80,
+            matchType: matchType
+          });
+        });
+
+        // 기존 로컬 매칭과 합쳐서 중복 제거 후 렌더링
+        const existingNames = new Set();
+        const merged = [];
+
+        // 로컬 상위 매칭 먼저
+        allRegions.forEach(r => {
+          if (r.name.toLowerCase().includes(query.toLowerCase())) {
+            let mType = r.name.includes('읍') ? '읍' : (r.name.includes('면') ? '면' : (r.name.includes('동') ? '동' : (r.name.includes('리') ? '리' : '시군구')));
+            merged.push({ item: r, matchType: mType });
+            existingNames.add(r.name);
+          }
+        });
+
+        // 온라인 결과 추가
+        onlineMatches.forEach(om => {
+          if (!existingNames.has(om.item.name)) {
+            merged.push(om);
+            existingNames.add(om.item.name);
+          }
+        });
+
+        if (merged.length > 0) {
+          renderAutocompleteHtml(merged.slice(0, 9), query, true);
+        }
+      } catch (err) {
+        console.warn('온라인 읍면동 자동완성 오류:', err);
+      }
+    }
+
+    function renderAutocompleteHtml(matches, query, isOnlineCombined) {
+      const listEl = document.getElementById('autocompleteList');
+      if (!listEl) return;
 
       const html = matches.map((mObj, idx) => {
         const m = mObj.item;
         const tag = mObj.matchType;
         
-        // 검색어 하이라이트
         const regex = new RegExp(`(${query})`, 'gi');
         const highlightedName = m.name.replace(regex, '<span class="highlight" style="color:#007aff; font-weight:700;">$1</span>');
         
         const popFormatted = m.pop >= 10000 
           ? (m.pop / 10000).toFixed(1) + '만' 
-          : m.pop.toLocaleString();
+          : (m.pop ? m.pop.toLocaleString() : '확인중');
         
         const isAlert = m.infraStatus === '심각' || m.infraStatus === '위험';
 
@@ -2563,11 +2648,11 @@
 
         return `
           <div class="autocomplete-item" data-idx="${idx}" onclick="selectAutocomplete('${m.name}')" style="display:flex; justify-content:space-between; align-items:center; padding:9px 12px; cursor:pointer;">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span style="font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:6px; background:${tagBg}; color:${tagColor};">${tag}</span>
-              <span style="font-size:13px; font-weight:600; color:#1f2937;">${highlightedName}</span>
+            <div style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70%;">
+              <span style="font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:6px; background:${tagBg}; color:${tagColor}; flex-shrink:0;">${tag}</span>
+              <span style="font-size:13px; font-weight:600; color:#1f2937; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${highlightedName}</span>
             </div>
-            <div class="item-meta" style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:#6b7280;">
+            <div class="item-meta" style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:#6b7280; flex-shrink:0;">
               ${m.infraStatus ? `<span class="item-badge ${isAlert ? 'alert' : ''}" style="font-size:10.5px; padding:2px 6px; border-radius:6px; background:${isAlert ? '#fee2e2' : '#f3f4f6'}; color:${isAlert ? '#dc2626' : '#4b5563'}; font-weight:600;">${m.infraStatus}</span>` : ''}
               <span>👥 ${popFormatted}명</span>
             </div>
