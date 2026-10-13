@@ -7,6 +7,7 @@
   
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
     :root {
@@ -56,11 +57,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    @keyframes shellEntrance {
-      0% { opacity: 0; transform: translateY(22px) scale(0.985); }
-      100% { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
     .glass-phone-shell {
       width: 100%;
       max-width: 100%;
@@ -78,21 +74,6 @@
       flex-direction: column;
       gap: 12px;
       position: relative;
-      animation: shellEntrance 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    @keyframes iconFloat {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-4px); }
-    }
-
-    .sf-icon {
-      animation: iconFloat 3.5s ease-in-out infinite;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .sf-icon:hover {
-      transform: rotate(12deg) scale(1.12);
     }
 
     .glass-header {
@@ -101,7 +82,7 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 16px;
-      padding-bottom: 18px;
+      padding-bottom: 14px;
       border-bottom: 1px solid var(--glass-border-subtle);
     }
 
@@ -116,192 +97,96 @@
       height: 48px;
       background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.4));
       border: 1.5px solid var(--glass-border);
-      backdrop-filter: var(--glass-blur);
       border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 24px;
-      box-shadow: 0 8px 16px rgba(0, 122, 255, 0.15);
     }
 
     .brand-text h1 {
       font-size: 23px;
       font-weight: 700;
-      letter-spacing: -0.6px;
       color: var(--text-main);
     }
 
     .brand-text p {
       font-size: 13px;
       color: var(--text-sub);
-      font-weight: 500;
-      margin-top: 1px;
     }
 
     .search-dock {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       width: 100%;
-      max-width: 580px;
+      max-width: 680px;
+      flex-wrap: wrap;
     }
 
     .search-glass-pill {
       position: relative;
       flex: 1;
+      min-width: 200px;
       display: flex;
       align-items: center;
-    }
-
-    .search-glass-pill svg {
-      position: absolute;
-      left: 18px;
-      width: 18px;
-      height: 18px;
-      color: #86868b;
-      pointer-events: none;
     }
 
     .glass-input {
       width: 100%;
-      padding: 13px 20px 13px 46px;
+      padding: 12px 18px 12px 42px;
       background: rgba(255, 255, 255, 0.65);
       border: 1px solid rgba(255, 255, 255, 0.8);
       border-radius: 20px;
       font-size: 14px;
-      font-weight: 500;
       color: var(--text-main);
       outline: none;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.02) inset;
-      backdrop-filter: blur(12px);
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .glass-input:focus {
-      background: rgba(255, 255, 255, 0.95);
-      border-color: var(--apple-blue);
-      box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2);
-    }
-
-    /* 실시간 자동완성 검색 추천 드롭다운 */
     .autocomplete-list {
       position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      right: 0;
-      background: rgba(255, 255, 255, 0.94);
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      top: calc(100% + 6px);
+      left: 0; right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
       border: 1.5px solid rgba(255, 255, 255, 0.9);
-      border-radius: 18px;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.14);
-      max-height: 280px;
+      border-radius: 16px;
+      box-shadow: 0 14px 30px rgba(0,0,0,0.12);
+      max-height: 240px;
       overflow-y: auto;
       z-index: 2000;
       padding: 6px;
       display: none;
-      animation: dropDownSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes dropDownSlide {
-      from { opacity: 0; transform: translateY(-6px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .autocomplete-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px;
-      border-radius: 12px;
+      padding: 9px 12px;
+      border-radius: 10px;
       cursor: pointer;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 600;
-      color: var(--text-main);
-      transition: all 0.15s ease;
     }
-
-    .autocomplete-item:hover, .autocomplete-item.selected {
-      background: rgba(0, 122, 255, 0.1);
-      color: var(--apple-blue);
-      transform: translateX(4px);
-    }
-
-    .autocomplete-item .item-meta {
-      font-size: 11.5px;
-      color: var(--text-sub);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .autocomplete-item .item-badge {
-      font-size: 10.5px;
-      padding: 2px 6px;
-      border-radius: 6px;
-      background: rgba(0,0,0,0.06);
-    }
-
-    .autocomplete-item .item-badge.alert {
-      background: rgba(239, 68, 68, 0.12);
-      color: #dc2626;
-    }
-
-    .autocomplete-item .highlight {
-      color: var(--apple-blue);
-      font-weight: 800;
-      text-decoration: underline;
-    }
+    .autocomplete-item:hover { background: rgba(0, 122, 255, 0.1); color: var(--apple-blue); }
 
     .ios-btn {
-      padding: 12px 22px;
+      padding: 11px 14px;
       border: none;
-      border-radius: 20px;
-      font-size: 14px;
+      border-radius: 18px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      gap: 4px;
       white-space: nowrap;
+      transition: transform 0.15s ease;
     }
+    .ios-btn:hover { transform: scale(1.02); }
 
-    .btn-apple-blue {
-      background: var(--apple-blue);
-      color: #ffffff;
-      box-shadow: 0 6px 16px rgba(0, 122, 255, 0.3);
-    }
-
-    .btn-apple-blue:hover {
-      background: var(--apple-blue-hover);
-      transform: scale(1.02);
-    }
-
-    .btn-apple-glass {
-      background: rgba(255, 255, 255, 0.7);
-      color: var(--text-main);
-      border: 1px solid var(--glass-border);
-      backdrop-filter: blur(10px);
-    }
-
-    .btn-apple-glass:hover {
-      background: rgba(255, 255, 255, 0.9);
-      transform: scale(1.02);
-    }
-
-    .glass-chips-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      padding: 10px 18px;
-      background: rgba(255, 255, 255, 0.45);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--glass-border-subtle);
-      border-radius: 20px;
-    }
+    .btn-apple-blue { background: var(--apple-blue); color: #fff; }
+    .btn-apple-glass { background: rgba(255, 255, 255, 0.75); color: var(--text-main); border: 1px solid var(--glass-border); }
+    .btn-apple-green { background: #34c759; color: #fff; }
+    .btn-apple-purple { background: #af52de; color: #fff; }
 
     /* 카테고리 필터 탭 바 */
     .infra-filter-bar {
@@ -312,7 +197,6 @@
       padding: 8px 14px;
       background: rgba(255, 255, 255, 0.5);
       backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--glass-border-subtle);
       border-radius: 20px;
     }
@@ -321,167 +205,68 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 7px 14px;
+      padding: 6px 12px;
       border-radius: 30px;
       border: 1.5px solid rgba(0,0,0,0.08);
       background: rgba(255,255,255,0.7);
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 700;
       color: #6b7280;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      white-space: nowrap;
+      transition: all 0.2s ease;
     }
+    .filter-tab:hover { transform: translateY(-1px); }
+    .filter-tab.active { color: #fff; border-color: transparent; transform: translateY(-1px) scale(1.02); background: var(--apple-blue); }
 
-    .filter-tab:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    .filter-tab.active {
-      color: #fff;
-      border-color: transparent;
-      transform: translateY(-2px) scale(1.03);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    }
-
-    .filter-tab[data-cat="medical"].active   { background: #dc2626; }
-    .filter-tab[data-cat="traffic"].active    { background: #ea580c; }
-    .filter-tab[data-cat="education"].active  { background: #4338ca; }
-    .filter-tab[data-cat="culture"].active    { background: #7c3aed; }
-    .filter-tab[data-cat="fire"].active       { background: #c2410c; }
-    .filter-tab[data-cat="welfare"].active    { background: #0f766e; }
-    .filter-tab[data-cat="digital"].active    { background: #0e7490; }
-    .filter-tab[data-cat="water"].active      { background: #0284c7; }
-    .filter-tab[data-cat="energy"].active     { background: #eab308; }
-    .filter-tab[data-cat="living"].active     { background: #14b8a6; }
-    .filter-tab[data-cat="environment"].active { background: #15803d; }
-    .filter-tab[data-cat="job"].active        { background: #475569; }
-    .filter-tab[data-cat="danger"].active     { background: #4b5563; }
-
-    /* 인프라 패널 (칩 목록) */
-    .infra-panel {
-      overflow: hidden;
-      max-height: 0;
-      opacity: 0;
-      padding: 0 18px;
-      transition: max-height 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
-                  opacity 0.3s ease,
-                  padding 0.35s ease;
-    }
-
-    .infra-panel.open {
-      max-height: 200px;
-      opacity: 1;
-      padding: 10px 18px;
-    }
-
-    .infra-chip-group {
+    /* 통계 요약 패널 */
+    .stats-summary-card {
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      background: rgba(255,255,255,0.45);
+      justify-content: space-between;
+      padding: 10px 18px;
+      background: rgba(255, 255, 255, 0.7);
       backdrop-filter: blur(16px);
-      border: 1px solid var(--glass-border-subtle);
+      border: 1px solid var(--glass-border);
       border-radius: 18px;
-      padding: 10px 16px;
-      animation: chipSlideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    @keyframes chipSlideIn {
-      0% { opacity: 0; transform: translateY(-8px) scale(0.97); }
-      100% { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    .chip-label {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-sub);
-      margin-right: 2px;
-    }
-
-    .ios-chip {
-      background: rgba(255, 255, 255, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.9);
-      padding: 6px 14px;
-      border-radius: 30px;
       font-size: 13px;
       font-weight: 600;
-      color: var(--text-main);
-      cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
-
-    .ios-chip:hover {
-      background: var(--apple-blue);
-      color: #ffffff;
-      border-color: var(--apple-blue);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 14px rgba(0, 122, 255, 0.25);
+    .stats-progress-container {
+      flex: 1;
+      margin: 0 16px;
+      background: rgba(0, 0, 0, 0.08);
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
     }
-
-    .ios-chip.alert {
-      background: rgba(255, 237, 237, 0.85);
-      border-color: rgba(254, 202, 202, 0.9);
-      color: #b91c1c;
-    }
-
-    .ios-chip.alert:hover {
-      background: #ef4444;
-      color: #ffffff;
-      border-color: #ef4444;
-      box-shadow: 0 6px 14px rgba(239, 68, 68, 0.3);
-    }
-
-    .chip-divider {
-      width: 1px;
-      height: 18px;
-      background: rgba(0, 0, 0, 0.12);
-      margin: 0 4px;
+    .stats-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #34c759, #ff9500, #ff3b30);
+      width: 0%;
+      transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .status-dynamic {
-      padding: 13px 20px;
-      border-radius: 18px;
-      font-size: 14px;
+      padding: 10px 16px;
+      border-radius: 16px;
+      font-size: 13px;
       font-weight: 600;
       display: none;
       backdrop-filter: blur(20px);
       border: 1px solid rgba(255, 255, 255, 0.8);
-      box-shadow: var(--shadow-float);
-      animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
-
-    @keyframes popIn {
-      from { opacity: 0; transform: scale(0.96) translateY(-4px); }
-      to { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    .status-dynamic.success {
-      background: rgba(236, 253, 245, 0.85);
-      color: #065f46;
-      border-color: #a7f3d0;
-    }
-
-    .status-dynamic.fail {
-      background: rgba(254, 242, 242, 0.85);
-      color: #991b1b;
-      border-color: #fecaca;
-    }
+    .status-dynamic.success { background: rgba(236, 253, 245, 0.85); color: #065f46; }
+    .status-dynamic.fail { background: rgba(254, 242, 242, 0.85); color: #991b1b; }
 
     .map-wrapper {
       position: relative;
       width: 100%;
-      flex: 1 1 680px;
-      min-height: 650px;
-      height: calc(100vh - 240px);
-      height: calc(100dvh - 240px);
+      flex: 1;
+      min-height: 500px;
+      height: calc(100vh - 310px);
       border-radius: 26px;
-      overflow: visible; /* 레이어 옵션창이 잘리지 않도록 visible */
+      overflow: visible;
       border: 1.5px solid var(--glass-border);
-      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
     }
 
     #map {
@@ -489,716 +274,97 @@
       height: 100%;
       border-radius: 26px;
       z-index: 1;
-      /* 지도 타일만 안쪽에서 잘리도록 처리 */
       clip-path: inset(0 round 26px);
     }
 
-    /* Leaflet 컨트롤이 항상 지도 위에 표시되도록 z-index 강제 상향 */
-    .leaflet-control-container {
-      z-index: 900 !important;
+    .leaflet-control-container { z-index: 900 !important; }
+    .leaflet-top.leaflet-left { top: 65px !important; left: 14px !important; }
+    .leaflet-top.leaflet-right { top: 65px !important; right: 14px !important; }
+
+    .leaflet-bar {
+      border: 1.5px solid rgba(255, 255, 255, 0.95) !important;
+      border-radius: 14px !important;
+      background: rgba(255, 255, 255, 0.85) !important;
+      backdrop-filter: blur(20px) !important;
+      overflow: hidden;
     }
+    .leaflet-bar a { width: 36px !important; height: 36px !important; line-height: 36px !important; }
 
     .leaflet-control-layers {
-      z-index: 1100 !important;
-      position: relative !important;
+      background: rgba(255, 255, 255, 0.85) !important;
+      backdrop-filter: blur(20px) !important;
+      border: 1.5px solid rgba(255, 255, 255, 0.95) !important;
+      border-radius: 18px !important;
+      padding: 10px 14px !important;
+      font-size: 13px !important;
+      color: var(--text-main) !important;
     }
 
-    .leaflet-control-layers-expanded {
-      z-index: 1200 !important;
-      overflow: visible !important;
-    }
-
-    .leaflet-top, .leaflet-bottom {
-      z-index: 1000 !important;
-    }
-
-    /* 지도 레이어 전환 시 부드러운 크로스페이드 & 줌 블러 애니메이션 */
-    @keyframes tileLayerSwap {
-      0% {
-        opacity: 0.2;
-        filter: blur(8px) brightness(1.15) saturate(1.2);
-      }
-      50% {
-        opacity: 0.8;
-        filter: blur(2px) brightness(1.04) saturate(1.05);
-      }
-      100% {
-        opacity: 1;
-        filter: blur(0px) brightness(1) saturate(1);
-      }
-    }
-
-    .tile-switching-anim {
-      animation: tileLayerSwap 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-      will-change: opacity, filter;
-    }
-
-    /* 개별 타일 부드러운 로드 페이드 */
-    .leaflet-tile {
-      transition: opacity 0.35s cubic-bezier(0.25, 1, 0.5, 1) !important;
-    }
-
-    /* 지도 레이어 전환 시 조명 스캔 오버레이 */
-    .map-layer-flash {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 500;
-      border-radius: 26px;
-      background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.6) 0%, rgba(0, 122, 255, 0.2) 40%, rgba(255, 255, 255, 0) 75%);
-      opacity: 0;
-    }
-
-    .map-layer-flash.active {
-      animation: mapLayerFlashAnim 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    @keyframes mapLayerFlashAnim {
-      0% { opacity: 0; transform: scale(0.97); }
-      30% { opacity: 0.85; transform: scale(1); }
-      100% { opacity: 0; transform: scale(1.02); }
-    }
-
-    /* 지도 바로 위에 띄워지는 실시간 지역 바로가기 버튼 바 */
     .map-floating-region-bar {
       position: absolute;
-      top: 14px;
-      left: 14px;
-      right: 14px;
+      top: 14px; left: 65px; right: 75px;
       z-index: 800;
       display: flex;
       align-items: center;
       gap: 8px;
       overflow-x: auto;
-      overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
-      scroll-behavior: smooth;
-      padding: 10px 16px;
+      padding: 8px 14px;
       background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(24px) saturate(200%);
-      -webkit-backdrop-filter: blur(24px) saturate(200%);
+      backdrop-filter: blur(24px);
       border: 1.5px solid rgba(255, 255, 255, 0.95);
-      border-radius: 24px;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
-      cursor: grab;
-      user-select: none;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(0, 122, 255, 0.3) transparent;
-      transition: box-shadow 0.25s ease, background 0.25s ease;
+      border-radius: 20px;
     }
+    .floating-bar-hint { font-size: 12px; font-weight: 700; color: #4b5563; white-space: nowrap; }
 
-    .map-floating-region-bar:active {
-      cursor: grabbing;
-    }
-
-    .map-floating-region-bar::-webkit-scrollbar {
-      height: 4px;
-    }
-
-    .map-floating-region-bar::-webkit-scrollbar-thumb {
-      background: rgba(0, 122, 255, 0.25);
-      border-radius: 4px;
-    }
-
-    .floating-bar-hint {
-      font-size: 12.5px;
-      font-weight: 700;
-      color: #4b5563;
-      white-space: nowrap;
-      padding: 4px 6px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-
-    .floating-bar-hint::after {
-      content: '↔ 밀어서 이동';
-      font-size: 10.5px;
-      font-weight: 600;
-      color: var(--apple-blue);
-      background: rgba(0, 122, 255, 0.1);
-      padding: 2px 7px;
-      border-radius: 10px;
-      margin-left: 4px;
-    }
-
-    .floating-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 7px 14px;
-      border-radius: 999px;
-      border: 1.5px solid rgba(0, 0, 0, 0.08);
-      background: #ffffff;
-      font-size: 13px;
-      font-weight: 800;
-      color: #1f2937;
-      cursor: pointer;
-      white-space: nowrap;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-      flex-shrink: 0;
-    }
-
-    .floating-pill:hover {
-      transform: translateY(-2px) scale(1.04);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
-      background: var(--apple-blue);
-      color: #ffffff;
-      border-color: var(--apple-blue);
-    }
-
-    .floating-pill:active {
-      transform: scale(0.96);
-    }
-
-    .floating-pill.alert {
-      border-color: rgba(239, 68, 68, 0.3);
-      background: rgba(255, 245, 245, 0.95);
-      color: #b91c1c;
-    }
-
-    .floating-pill.alert:hover {
-      background: #ef4444;
-      color: #ffffff;
-      border-color: #ef4444;
-    }
-
-    .floating-pill .pill-meta {
-      font-size: 11px;
-      font-weight: 600;
-      opacity: 0.8;
-      margin-left: 2px;
-    }
-
-    /* 지도 레이어 전환 캡슐 다이내믹 토스트 알림 */
-    .layer-switch-toast {
-      position: absolute;
-      top: 18px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-35px) scale(0.9);
-      background: rgba(18, 22, 32, 0.85);
-      color: #ffffff;
-      padding: 9px 20px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border: 1.5px solid rgba(255, 255, 255, 0.25);
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3), 0 0 25px rgba(0, 122, 255, 0.35);
-      z-index: 1000;
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      white-space: nowrap;
-    }
-
-    .layer-switch-toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0) scale(1);
-    }
-
-    .layer-switch-toast .toast-indicator {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: #34c759;
-      box-shadow: 0 0 10px #34c759, 0 0 18px rgba(52, 199, 89, 0.7);
-      animation: pulseGreen 1.5s infinite;
-    }
-
-    @keyframes pulseGreen {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.4); opacity: 0.6; }
-    }
-
-    /* iOS Glassmorphism 레이어 컨트롤 스타일 */
-    .leaflet-control-layers {
-      background: rgba(255, 255, 255, 0.85) !important;
-      backdrop-filter: blur(20px) !important;
-      -webkit-backdrop-filter: blur(20px) !important;
-      border: 1.5px solid rgba(255, 255, 255, 0.95) !important;
-      border-radius: 18px !important;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
-      padding: 10px 14px !important;
-      font-family: inherit !important;
-      font-size: 13px !important;
-      font-weight: 600 !important;
-      color: var(--text-main) !important;
-      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
-    }
-
-    .leaflet-control-layers:hover {
-      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.18) !important;
-    }
-
-    .leaflet-control-layers label {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      margin: 4px 0 !important;
-      padding: 5px 9px;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .leaflet-control-layers label:hover {
-      background: rgba(0, 122, 255, 0.08);
-      transform: translateX(4px);
-    }
-
-    .leaflet-control-layers label:active {
-      transform: scale(0.96);
-    }
-
-    .leaflet-control-layers input[type="radio"]:checked + span {
-      color: var(--apple-blue);
-      font-weight: 800;
-      text-shadow: 0 0 12px rgba(0, 122, 255, 0.3);
-    }
-
-    @keyframes radarPulse {
-      0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.6), 0 4px 12px rgba(0, 0, 0, 0.15); transform: translate(-50%, -50%) scale(1); }
-      50% { box-shadow: 0 0 0 10px rgba(0, 122, 255, 0), 0 6px 16px rgba(0, 0, 0, 0.2); transform: translate(-50%, -50%) scale(1.04); }
-      100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0), 0 4px 12px rgba(0, 0, 0, 0.15); transform: translate(-50%, -50%) scale(1); }
-    }
-
-    @keyframes radarPulseAlert {
-      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7), 0 4px 12px rgba(0, 0, 0, 0.15); transform: translate(-50%, -50%) scale(1); }
-      50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0), 0 6px 16px rgba(0, 0, 0, 0.25); transform: translate(-50%, -50%) scale(1.05); }
-      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0), 0 4px 12px rgba(0, 0, 0, 0.15); transform: translate(-50%, -50%) scale(1); }
-    }
-
-    /* Leaflet DivIcon 기본 스타일 리셋 및 지역명 클릭 핀 뱃지 */
-    .pop-custom-div-icon {
-      background: transparent !important;
-      border: none !important;
-      overflow: visible !important;
-    }
-
+    .pop-custom-div-icon { background: transparent !important; border: none !important; }
     .pop-marker-badge {
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 5px !important;
-      background: rgba(255, 255, 255, 0.95) !important;
-      backdrop-filter: blur(14px) !important;
-      -webkit-backdrop-filter: blur(14px) !important;
-      border: 2px solid var(--apple-blue);
-      border-radius: 28px !important;
-      padding: 6px 14px !important;
-      font-size: 13px !important;
-      font-weight: 800 !important;
-      color: #1d1d1f !important;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22) !important;
-      white-space: nowrap !important;
-      text-align: center !important;
-      cursor: pointer !important;
-      transform: translate(-50%, -50%) !important;
-      width: auto !important;
-      height: auto !important;
-      line-height: 1.2 !important;
-      user-select: none;
-      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-      animation: radarPulse 2.4s infinite ease-in-out;
+      display: inline-flex !important; align-items: center !important; gap: 5px !important;
+      background: rgba(255, 255, 255, 0.95) !important; backdrop-filter: blur(14px) !important;
+      border: 2px solid var(--apple-blue); border-radius: 28px !important;
+      padding: 6px 14px !important; font-size: 13px !important; font-weight: 800 !important; color: #1d1d1f !important;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22) !important; cursor: pointer !important;
     }
 
-    .pop-marker-badge:hover {
-      transform: translate(-50%, -50%) scale(1.15) !important;
-      z-index: 9999 !important;
-      background: #ffffff !important;
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3) !important;
-    }
-
-    .pop-marker-badge:active {
-      transform: translate(-50%, -50%) scale(0.96) !important;
-    }
-
-    .pop-marker-badge .badge-region {
-      font-weight: 800;
-      color: #111827;
-      letter-spacing: -0.2px;
-    }
-
-    .pop-marker-badge .badge-tag {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 8px;
-      background: rgba(0, 0, 0, 0.05);
-    }
-
-    .pop-marker-badge.alert {
-      border-color: #ef4444;
-      background: rgba(255, 245, 245, 0.96) !important;
-    }
-
-    .pop-marker-badge.alert .badge-region {
-      color: #b91c1c;
-    }
-
-    .pop-marker-badge span.num {
-      color: var(--apple-blue);
-      font-weight: 800;
-      margin-left: 2px;
-    }
-
-    .pop-marker-badge.alert span.num {
-      color: #ef4444;
-    }
-
-    .pop-marker-badge .badge-action {
-      font-size: 10px;
-      font-weight: 700;
-      color: #6b7280;
-      background: rgba(0, 0, 0, 0.05);
-      padding: 1px 5px;
-      border-radius: 6px;
-      margin-left: 2px;
-    }
-
-    .leaflet-control-layers label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin: 4px 0;
-      cursor: pointer;
-    }
-
-    @keyframes cardPopBounce {
-      0% { opacity: 0; transform: scale(0.88) translateY(12px); }
-      70% { transform: scale(1.02) translateY(-2px); }
-      100% { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    .leaflet-popup-content-wrapper {
-      background: rgba(255, 255, 255, 0.82) !important;
-      backdrop-filter: blur(24px) saturate(180%) !important;
-      -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-      border: 1.5px solid rgba(255, 255, 255, 0.9) !important;
-      border-radius: 22px !important;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16) !important;
-      padding: 6px !important;
-      animation: cardPopBounce 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-    }
-
-    .pop-card {
-      padding: 8px 12px;
-      min-width: 210px;
-      font-family: inherit;
-    }
-
-    .pop-header h3 {
-      font-size: 16px;
-      font-weight: 800;
-      color: var(--text-main);
-      margin-bottom: 6px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid rgba(0,0,0,0.06);
-    }
-
-    .stat-badge {
-      display: inline-flex;
-      align-items: baseline;
-      gap: 5px;
-      background: rgba(0, 122, 255, 0.12);
-      color: var(--apple-blue);
-      padding: 6px 14px;
-      border-radius: 12px;
-      margin: 4px 0 8px 0;
-      font-weight: 700;
-    }
-
-    .stat-badge .num {
-      font-size: 18px;
-      font-weight: 800;
-    }
-
-    .infra-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin: 8px 0;
-    }
-
-    .infra-tag {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 8px;
-      border-radius: 8px;
-      background: rgba(239, 68, 68, 0.12);
-      color: #dc2626;
-      border: 1px solid rgba(239, 68, 68, 0.2);
-    }
-
-    .infra-tag.warning {
-      background: rgba(245, 158, 11, 0.12);
-      color: #b45309;
-      border-color: rgba(245, 158, 11, 0.2);
-    }
-
-    .infra-tag.education {
-      background: rgba(99, 102, 241, 0.12);
-      color: #4338ca;
-      border-color: rgba(99, 102, 241, 0.2);
-    }
-
-    .infra-tag.culture {
-      background: rgba(168, 85, 247, 0.12);
-      color: #7c3aed;
-      border-color: rgba(168, 85, 247, 0.2);
-    }
-
-    .infra-tag.fire {
-      background: rgba(249, 115, 22, 0.12);
-      color: #c2410c;
-      border-color: rgba(249, 115, 22, 0.2);
-    }
-
-    .infra-tag.welfare {
-      background: rgba(20, 184, 166, 0.12);
-      color: #0f766e;
-      border-color: rgba(20, 184, 166, 0.2);
-    }
-
-    .infra-tag.digital {
-      background: rgba(6, 182, 212, 0.12);
-      color: #0e7490;
-      border-color: rgba(6, 182, 212, 0.2);
-    }
-
-    .infra-tag.water {
-      background: rgba(2, 132, 199, 0.12);
-      color: #0369a1;
-      border-color: rgba(2, 132, 199, 0.2);
-    }
-
-    .infra-tag.energy {
-      background: rgba(234, 179, 8, 0.12);
-      color: #a16207;
-      border-color: rgba(234, 179, 8, 0.2);
-    }
-
-    .infra-tag.living {
-      background: rgba(20, 184, 166, 0.12);
-      color: #0f766e;
-      border-color: rgba(20, 184, 166, 0.2);
-    }
-
-    .infra-tag.environment {
-      background: rgba(21, 128, 61, 0.12);
-      color: #15803d;
-      border-color: rgba(21, 128, 61, 0.2);
-    }
-
-    .infra-tag.job {
-      background: rgba(71, 85, 105, 0.12);
-      color: #334155;
-      border-color: rgba(71, 85, 105, 0.2);
-    }
-
-    .infra-tag.good {
-      background: rgba(16, 185, 129, 0.12);
-      color: #059669;
-      border-color: rgba(16, 185, 129, 0.2);
-    }
-
-    .infra-score-bar {
-      margin: 8px 0;
-      padding: 8px 10px;
-      background: rgba(0, 0, 0, 0.04);
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .desc {
-      font-size: 12px;
-      color: var(--text-sub);
-      line-height: 1.5;
-    }
-
-    /* 반응형 미디어 쿼리 (모바일, 태블릿, 데스크톱 모든 환경 최적화) */
     @media (max-width: 768px) {
-      body {
-        padding: 8px 6px;
-      }
-
-      .glass-phone-shell {
-        border-radius: 24px;
-        padding: 16px 14px;
-        gap: 12px;
-      }
-
-      .glass-header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-        padding-bottom: 12px;
-      }
-
-      .brand-ios {
-        gap: 10px;
-      }
-
-      .sf-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 20px;
-        border-radius: 12px;
-      }
-
-      .brand-text h1 {
-        font-size: 18px;
-      }
-
-      .brand-text p {
-        font-size: 11px;
-      }
-
-      .search-dock {
-        max-width: 100%;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .search-glass-pill {
-        width: 100%;
-        flex: 1 1 100%;
-      }
-
-      .glass-input {
-        padding: 11px 16px 11px 42px;
-        font-size: 13px;
-      }
-
-      .ios-btn {
-        flex: 1;
-        padding: 10px 14px;
-        font-size: 13px;
-        justify-content: center;
-      }
-
-      .glass-chips-bar {
-        padding: 8px 10px;
-        gap: 6px;
-      }
-
-      .chip-label {
-        width: 100%;
-        margin-bottom: 2px;
-      }
-
-      .chip-divider {
-        display: none;
-      }
-
-      .ios-chip {
-        padding: 5px 10px;
-        font-size: 11px;
-      }
-
-      .map-wrapper {
-        min-height: 520px;
-        height: 65vh;
-        height: 65dvh;
-        flex: 1 1 520px;
-        border-radius: 20px;
-        overflow: visible;
-      }
-
-      #map {
-        height: 100%;
-        border-radius: 20px;
-        clip-path: inset(0 round 20px);
-      }
-
-      .leaflet-control-layers {
-        font-size: 11px !important;
-        padding: 6px 8px !important;
-        z-index: 1200 !important;
-      }
-    }
-
-    @media (max-width: 480px) {
-      body {
-        padding: 6px;
-      }
-
-      .glass-phone-shell {
-        padding: 10px 12px;
-        border-radius: 20px;
-        min-height: calc(100dvh - 12px);
-        gap: 8px;
-      }
-
-      .map-wrapper {
-        min-height: 480px;
-        height: 62vh;
-        height: 62dvh;
-        border-radius: 18px;
-      }
-
-      #map {
-        border-radius: 18px;
-      }
-
-      .brand-text h1 {
-        font-size: 16px;
-      }
-
-      .filter-tab {
-        padding: 5px 10px;
-        font-size: 11.5px;
-      }
+      .map-wrapper { min-height: 420px; height: 55vh; }
+      .leaflet-top.leaflet-left { top: 60px !important; left: 8px !important; }
+      .leaflet-top.leaflet-right { top: 58px !important; right: 8px !important; }
+      .map-floating-region-bar { left: 55px; right: 65px; }
     }
   </style>
 </head>
 <body>
 
-  <div class="glass-phone-shell">
+  <div class="glass-phone-shell" id="captureTargetArea">
     <header class="glass-header">
       <div class="brand-ios">
         <div class="sf-icon">🏥</div>
         <div class="brand-text">
           <h1>대한민국 인프라 소외지역 지도</h1>
-          <p>응급의료 · 철도/대중교통 · 문화교육 인프라 취약 지자체 정밀 분석</p>
+          <p>응급의료 · 철도/대중교통 · 문화교육 인프라 취약 지자체 및 읍·면·동 정밀 분석</p>
         </div>
       </div>
 
       <div class="search-dock">
         <div class="search-glass-pill">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-          </svg>
           <input 
             type="text" 
             id="searchInput" 
             class="glass-input" 
-            placeholder="시·군·구·읍·면·동 검색 (예: 화도읍, 사북읍, 흑산면, 역삼동, 와산리)"
+            placeholder="시·군·구·읍·면·동 검색 (예: 화도읍, 사북읍, 흑산면)"
             oninput="handleInputAutocomplete(this.value)"
-            onkeydown="handleKeyNavigation(event)"
-            onfocus="handleInputAutocomplete(this.value)"
             autocomplete="off"
-            autofocus
           />
           <div id="autocompleteList" class="autocomplete-list"></div>
         </div>
         <button class="ios-btn btn-apple-blue" onclick="handleSearch()">검색</button>
-        <button class="ios-btn btn-apple-glass" onclick="resetMap()">전국 초기화</button>
+        <button class="ios-btn btn-apple-green" onclick="locateMyPosition()">📍 내 위치</button>
+        <button class="ios-btn btn-apple-purple" onclick="captureMapScreenshot()">📸 캡처</button>
+        <button class="ios-btn btn-apple-glass" onclick="resetMap()">초기화</button>
       </div>
     </header>
 
-    <!-- 인프라 카테고리 필터 탭 (13대 인프라 정밀 분석) -->
+    <!-- 카테고리 필터 탭 -->
     <nav class="infra-filter-bar">
       <button class="filter-tab" data-cat="medical"     onclick="filterInfra('medical')">🚨 응급의료</button>
       <button class="filter-tab" data-cat="traffic"     onclick="filterInfra('traffic')">🚆 교통/철도</button>
@@ -1215,121 +381,13 @@
       <button class="filter-tab" data-cat="danger"      onclick="filterInfra('danger')">📉 소멸위험</button>
     </nav>
 
-    <!-- 카테고리별 패널 -->
-    <div class="infra-panel" id="panel-medical">
-      <div class="infra-chip-group">
-        <span class="chip-label" style="color:#dc2626;">🚨 응급의료 소외 지자체</span>
-        <button class="ios-chip alert" onclick="quickSearch('영양군')">경북 영양군 (응급의료원 부재)</button>
-        <button class="ios-chip alert" onclick="quickSearch('신안군')">전남 신안군 (도서 응급이송 취약)</button>
-        <button class="ios-chip alert" onclick="quickSearch('태백시')">강원 태백시 (필수의료 붕괴 위기)</button>
-        <button class="ios-chip alert" onclick="quickSearch('구례군')">전남 구례군 (분만·소아과 부재)</button>
+    <!-- 통계 요약 패널 -->
+    <div id="statsSummaryPanel" class="stats-summary-card" style="display: none;">
+      <span id="statsCategoryTitle">📊 선택 카테고리 통계</span>
+      <div class="stats-progress-container">
+        <div id="statsProgressBar" class="stats-progress-bar"></div>
       </div>
-    </div>
-
-    <div class="infra-panel" id="panel-traffic">
-      <div class="infra-chip-group">
-        <span class="chip-label" style="color:#ea580c;">🚆 교통/철도 소외 지자체</span>
-        <button class="ios-chip alert" onclick="quickSearch('청송군')">경북 청송군 (고속철도/국도 소외)</button>
-        <button class="ios-chip alert" onclick="quickSearch('양구군')">강원 양구군 (산간 접경 오지)</button>
-        <button class="ios-chip alert" onclick="quickSearch('무주군')">전북 무주군 (내륙 산간 교통취약)</button>
-      </div>
-    </div>
-
-    <div class="infra-panel" id="panel-education">
-      <div class="infra-chip-group">
-        <span class="chip-label" style="color:#4338ca;">📚 교육 소외 지자체</span>
-        <button class="ios-chip" onclick="quickSearch('임실군')">전북 임실군 (고교 1개교)</button>
-        <button class="ios-chip" onclick="quickSearch('장수군')">전북 장수군 (학원 전무)</button>
-        <button class="ios-chip" onclick="quickSearch('봉화군')">경북 봉화군 (대학교 전무)</button>
-      </div>
-    </div>
-
-    <div class="infra-panel" id="panel-culture">
-      <div class="infra-chip-group">
-        <span class="chip-label" style="color:#7c3aed;">🎭 문화/체육 소외 지자체</span>
-        <button class="ios-chip" onclick="quickSearch('울릉군')">경북 울릉군 (문화시설 전무)</button>
-        <button class="ios-chip" onclick="quickSearch('영덕군')">경북 영덕군 (공연장 부재)</button>
-        <button class="ios-chip" onclick="quickSearch('진안군')">전북 진안군 (체육관 부재)</button>
-      </div>
-    </div>
-
-    <div class="infra-panel" id="panel-fire">
-      <div class="infra-chip-group">
-        <span class="chip-label" style="color:#c2410c;">🚒 소방/안전 소외 지자체</span>
-        <button class="ios-chip alert" onclick="quickSearch('옹진군')">인천 옹진군 (도서지역 골든타임 초과)</button>
-        <button class="ios-chip alert" onclick="quickSearch('횡성군')">강원 횡성군 (소방서 원거리)</button>
-      </div>
-    </div>
-
-    <div class="infra-panel" id="panel-welfare">
-      <div class="infra-chip-group">
-        <span class="chip-label" style="color:#0f766e;">🏠 복지/돌봄 소외 지자체</span>
-        <button class="ios-chip" onclick="quickSearch('군위군')">대구 군위군 (노인돌봄 인력부족)</button>
-        <button class="ios-chip" onclick="quickSearch('함양군')">경남 함양군 (어린이집 감소)</button>
-      </div>
-    </div>
-
-    <div class="infra-panel" id="panel-digital">
-      <div class="infra-chip-group">
-        <span class="chip-label" style="color:#0e7490;">📡 통신/디지털 소외 지자체</span>
-        <button class="ios-chip" onclick="quickSearch('영월군')">강원 영월군 (5G 음영지역)</button>
-        <button class="ios-chip alert" onclick="quickSearch('화순군')">전남 화순군 (디지털 접근성 취약)</button>
-      </div>
-    </div>
-
-    <div class="infra-panel" id="panel-water">
-      <div class="infra-chip-group">
-        <span class="chip-label" style="color:#0284c7;">💧 상수도/수자원 취약 지자체</span>
-        <button class="ios-chip alert" onclick="quickSearch('완도군')">전남 완도군 (도서 가뭄 제한급수 취약)</button>
-        <button class="ios-chip alert" onclick="quickSearch('진도군')">전남 진도군 (소규모 수도시설 의존)</button>
-        <button class="ios-chip" onclick="quickSearch('신안군')">전남 신안군 (식수원 부족 도서)</button>
-      </div>
-    </div>
-
-    <div class="infra-panel" id="panel-energy">
-      <div class="infra-chip-group">
-        <span class="chip-label" style="color:#a16207;">⚡ 에너지/도시가스 소외 지자체</span>
-        <button class="ios-chip alert" onclick="quickSearch('영양군')">경북 영양군 (도시가스 미공급·LPG배관)</button>
-        <button class="ios-chip alert" onclick="quickSearch('청송군')">경북 청송군 (도시가스 보급률 최하위)</button>
-        <button class="ios-chip" onclick="quickSearch('인제군')">강원 인제군 (혹한기 난방취약)</button>
-      </div>
-    </div>
-
-    <div class="infra-panel" id="panel-living">
-      <div class="infra-chip-group">
-        <span class="chip-label" style="color:#0f766e;">🛒 생활·필수편의상권 소외 지자체</span>
-        <button class="ios-chip alert" onclick="quickSearch('의령군')">경남 의령군 (대형마트·외식상권 부재)</button>
-        <button class="ios-chip alert" onclick="quickSearch('산청군')">경남 산청군 (생필품 접근거리 원거리)</button>
-        <button class="ios-chip" onclick="quickSearch('곡성군')">전남 곡성군 (금융·상업점포 감소)</button>
-      </div>
-    </div>
-
-    <div class="infra-panel" id="panel-environment">
-      <div class="infra-chip-group">
-        <span class="chip-label" style="color:#15803d;">🌲 환경·재해대응 취약 지자체</span>
-        <button class="ios-chip alert" onclick="quickSearch('울진군')">경북 울진군 (동해안 대형산불 위험지구)</button>
-        <button class="ios-chip alert" onclick="quickSearch('삼척시')">강원 삼척시 (산불·침수 복합 취약)</button>
-        <button class="ios-chip" onclick="quickSearch('합천군')">경남 합천군 (하천 범람·자연재해 취약)</button>
-      </div>
-    </div>
-
-    <div class="infra-panel" id="panel-job">
-      <div class="infra-chip-group">
-        <span class="chip-label" style="color:#334155;">💼 청년일자리·산업기반 소외 지자체</span>
-        <button class="ios-chip alert" onclick="quickSearch('태백시')">강원 태백시 (석탄공사 폐광 일자리 위기)</button>
-        <button class="ios-chip alert" onclick="quickSearch('보성군')">전남 보성군 (1차 농어업 편중·제조업 전무)</button>
-        <button class="ios-chip" onclick="quickSearch('영천시')">경북 영천시 (청년 일자리 유출)</button>
-      </div>
-    </div>
-
-    <div class="infra-panel" id="panel-danger">
-      <div class="infra-chip-group">
-        <span class="chip-label" style="color:#4b5563;">📉 소멸위험 복합지역</span>
-        <button class="ios-chip" onclick="quickSearch('의성군')">경북 의성군</button>
-        <button class="ios-chip" onclick="quickSearch('정선군')">강원 정선군</button>
-        <button class="ios-chip" onclick="quickSearch('고흥군')">전남 고흥군</button>
-        <button class="ios-chip" onclick="quickSearch('남원시')">전북 남원시</button>
-      </div>
+      <span id="statsCategoryDesc" style="font-weight: 700; color: #4b5563;">-</span>
     </div>
 
     <div id="resultInfo" class="status-dynamic"></div>
@@ -1337,15 +395,8 @@
     <div class="map-wrapper">
       <div id="map"></div>
       
-      <!-- 지도 상단에 바로 오버레이되는 실시간 인프라 취약 지자체 버튼 바 -->
       <div id="mapFloatingBar" class="map-floating-region-bar">
         <span class="floating-bar-hint">📍 인프라를 선택하면 여기에 해당 지역 바로가기 버튼이 표시됩니다</span>
-      </div>
-
-      <div id="mapFlashEffect" class="map-layer-flash"></div>
-      <div id="layerToast" class="layer-switch-toast">
-        <span class="toast-indicator"></span>
-        <span id="layerToastText">지도 레이어 전환 중...</span>
       </div>
     </div>
   </div>
@@ -1354,631 +405,133 @@
     const allRegions = [
       { name: "경기 수원시", keywords: ["수원", "수원시"], lat: 37.2636, lng: 127.0286, pop: 1192000, desc: "경기 최대 특례시", level: 12 },
       { name: "경기 용인시", keywords: ["용인", "용인시"], lat: 37.2411, lng: 127.1776, pop: 1076000, desc: "반도체 클러스터 특례시", level: 12 },
-      { name: "경기 고양시", keywords: ["고양", "고양시", "일산"], lat: 37.6584, lng: 126.8320, pop: 1073000, desc: "일산 호수공원 특례시", level: 12 },
-      { name: "경기 화성시", keywords: ["화성", "화성시", "동탄"], lat: 37.1995, lng: 126.8315, pop: 950000, desc: "동탄신도시 거점 특례시", level: 12 },
-      { name: "경기 성남시", keywords: ["성남", "성남시", "분당", "판교"], lat: 37.4200, lng: 127.1265, pop: 918000, desc: "판교테크노밸리 및 분당구", level: 12 },
-      { name: "경기 부천시", keywords: ["부천", "부천시"], lat: 37.5034, lng: 126.7660, pop: 780000, desc: "수도권 핵심 위성도시", level: 12 },
-      { name: "경기 남양주시", keywords: ["남양주", "남양주시"], lat: 37.6360, lng: 127.2165, pop: 736000, desc: "다산신도시 및 화도읍", level: 12 },
-      { name: "경기 안산시", keywords: ["안산", "안산시"], lat: 37.3219, lng: 126.8309, pop: 630000, desc: "서해안 제조공단 중심", level: 12 },
-      { name: "경기 평택시", keywords: ["평택", "평택시"], lat: 36.9921, lng: 127.1129, pop: 590000, desc: "고덕국제화신도시 및 안중읍", level: 12 },
-      { name: "경기 안양시", keywords: ["안양", "안양시", "평촌"], lat: 37.3943, lng: 126.9568, pop: 546000, desc: "평촌신도시 교육/주거지", level: 12 },
-      { name: "경기 시흥시", keywords: ["시흥", "시흥시", "배곧"], lat: 37.3802, lng: 126.8029, pop: 518000, desc: "배곧신도시 및 시화산단", level: 12 },
-      { name: "경기 파주시", keywords: ["파주", "파주시", "운정"], lat: 37.7600, lng: 126.7798, pop: 497000, desc: "운정신도시 및 출판도시", level: 12 },
-      { name: "경기 김포시", keywords: ["김포", "김포시"], lat: 37.6152, lng: 126.7157, pop: 486000, desc: "한강신도시 주거 거점", level: 12 },
-      { name: "경기 의정부시", keywords: ["의정부", "의정부시"], lat: 37.7381, lng: 127.0337, pop: 463000, desc: "경기북부 행정중심도시", level: 12 },
-      { name: "경기 광주시", keywords: ["경기 광주", "광주시"], lat: 37.4294, lng: 127.2551, pop: 391000, desc: "오포읍 및 남한산성", level: 12 },
-      { name: "경기 하남시", keywords: ["하남", "하남시", "미사"], lat: 37.5393, lng: 127.2148, pop: 329000, desc: "미사강변도시 및 위례", level: 12 },
-      { name: "경기 광명시", keywords: ["광명", "광명시"], lat: 37.4786, lng: 126.8647, pop: 280000, desc: "KTX 광명역 역세권", level: 12 },
-      { name: "경기 군포시", keywords: ["군포", "군포시", "산본"], lat: 37.3614, lng: 126.9352, pop: 265000, desc: "산본신도시 주거 거점", level: 12 },
-      { name: "경기 양주시", keywords: ["양주", "양주시", "옥정"], lat: 37.7853, lng: 127.0458, pop: 260000, desc: "옥정신도시 신흥 주거도시", level: 12 },
-      { name: "경기 오산시", keywords: ["오산", "오산시", "세교"], lat: 37.1499, lng: 127.0772, pop: 239000, desc: "세교신도시 교육도시", level: 12 },
-      { name: "경기 이천시", keywords: ["이천", "이천시"], lat: 37.2723, lng: 127.4348, pop: 223000, desc: "SK하이닉스 반도체 본산", level: 12 },
-      { name: "경기 안성시", keywords: ["안성", "안성시"], lat: 37.0080, lng: 127.2797, pop: 189000, desc: "안성맞춤 전통문화도시", level: 12 },
-      { name: "경기 구리시", keywords: ["구리", "구리시"], lat: 37.5943, lng: 127.1296, pop: 187000, desc: "서울 동부 인접 주거도시", level: 12 },
-      { name: "의왕시", keywords: ["의왕", "의왕시"], lat: 37.3448, lng: 126.9683, pop: 158000, desc: "백운호수 및 철도특구", level: 12 },
-      { name: "포천시", keywords: ["포천", "포천시"], lat: 37.8949, lng: 127.2003, pop: 144000, desc: "산정호수 및 경기북부 거점", level: 12 },
-      { name: "여주시", keywords: ["여주", "여주시"], lat: 37.2984, lng: 127.6371, pop: 114000, desc: "도자기 및 남한강 수변도시", level: 12 },
-      { name: "동두천시", keywords: ["동두천", "동두천시"], lat: 37.9036, lng: 127.0607, pop: 89000, desc: "소요산 관광 거점도시", level: 12 },
-      { name: "과천시", keywords: ["과천", "과천시"], lat: 37.4292, lng: 126.9877, pop: 82000, desc: "정부과천청사 및 지식정보타운", level: 12 },
-
-      // [강원도 7개 시]
-      { name: "강원 원주시", keywords: ["원주", "원주시"], lat: 37.3422, lng: 127.9202, pop: 361000, desc: "강원 최대 인구 경제도시", level: 12 },
-      { name: "강원 춘천시", keywords: ["춘천", "춘천시"], lat: 37.8813, lng: 127.7298, pop: 287000, desc: "호반의 도시 춘천", level: 12 },
-      { name: "강원 강릉시", keywords: ["강릉", "강릉시", "경포대"], lat: 37.7519, lng: 128.8761, pop: 210000, desc: "영동권 중심 및 경포대", level: 12 },
-      { name: "강원 동해시", keywords: ["동해", "동해시"], lat: 37.5247, lng: 129.1143, pop: 89000, desc: "동해항 및 망상해수욕장", level: 12 },
-      { name: "강원 속초시", keywords: ["속초", "속초시", "설악산"], lat: 38.2070, lng: 128.5918, pop: 82000, desc: "설악산 및 영랑호 관광 거점", level: 12 },
-      { name: "강원 삼척시", keywords: ["삼척", "삼척시"], lat: 37.4499, lng: 129.1652, pop: 63000, desc: "해양레일바이크 및 환선굴", level: 12 },
-      { name: "강원 태백시", keywords: ["태백", "태백시"], lat: 37.1641, lng: 128.9856, pop: 39000, desc: "해발 고원 관광도시", level: 12 },
-
-      // [충청북도 3개 시]
-      { name: "충북 청주시", keywords: ["청주", "청주시"], lat: 36.6424, lng: 127.4890, pop: 852000, desc: "충북 거점 대도시 및 남이면", level: 12 },
-      { name: "충북 충주시", keywords: ["충주", "충주시"], lat: 36.9910, lng: 127.9260, pop: 208000, desc: "충주호 및 첨단기업도시", level: 12 },
-      { name: "충북 제천시", keywords: ["제천", "제천시"], lat: 37.1326, lng: 128.2117, pop: 130000, desc: "의림지 및 한방바이오 특구", level: 12 },
-
-      // [충청남도 8개 시]
-      { name: "충남 천안시", keywords: ["천안", "천안시"], lat: 36.8151, lng: 127.1139, pop: 658000, desc: "충남 최대 교통·산업도시", level: 12 },
-      { name: "충남 아산시", keywords: ["아산", "아산시"], lat: 36.7898, lng: 127.0019, pop: 340000, desc: "온천 관광 및 삼성 디스플레이", level: 12 },
-      { name: "충남 서산시", keywords: ["서산", "서산시"], lat: 36.7845, lng: 126.4503, pop: 176000, desc: "대산 석유화학 산업단지", level: 12 },
-      { name: "충남 당진시", keywords: ["당진", "당진시"], lat: 36.8898, lng: 126.6460, pop: 169000, desc: "서해안 철강항만 중심", level: 12 },
-      { name: "충남 논산시", keywords: ["논산", "논산시"], lat: 36.1872, lng: 127.0987, pop: 111000, desc: "육군훈련소 및 딸기 특구", level: 12 },
-      { name: "충남 공주시", keywords: ["공주", "공주시"], lat: 36.4465, lng: 127.1190, pop: 102000, desc: "백제 웅진성 역사문화도시", level: 12 },
-      { name: "충남 보령시", keywords: ["보령", "보령시", "대천"], lat: 36.3332, lng: 126.6129, pop: 96000, desc: "대천해수욕장 및 머드축제", level: 12 },
-      { name: "충남 계룡시", keywords: ["계룡", "계룡시"], lat: 36.2744, lng: 127.2486, pop: 45000, desc: "계룡대 3군 본부 국방도시", level: 12 },
-
-      // [전북특별자치도 6개 시]
-      { name: "전북 전주시", keywords: ["전주", "전주시"], lat: 35.8242, lng: 127.1480, pop: 641000, desc: "전북 수석도시 / 한옥마을", level: 12 },
-      { name: "전북 익산시", keywords: ["익산", "익산시"], lat: 35.9483, lng: 126.9576, pop: 270000, desc: "호남 철도 교통의 요충지", level: 12 },
-      { name: "전북 군산시", keywords: ["군산", "군산시"], lat: 35.9676, lng: 126.7366, pop: 260000, desc: "새만금 배후 항만도시", level: 12 },
-      { name: "전북 정읍시", keywords: ["정읍", "정읍시"], lat: 35.5699, lng: 126.8577, pop: 104000, desc: "내장산 국립공원 거점", level: 12 },
-      { name: "전북 김제시", keywords: ["김제", "김제시"], lat: 35.8036, lng: 126.8808, pop: 81000, desc: "벽골제 및 호남평야 지평선", level: 12 },
-      { name: "전북 남원시", keywords: ["남원", "남원시"], lat: 35.4164, lng: 127.3903, pop: 77000, desc: "광한루원 및 춘향문화도시", level: 12 },
-
-      // [전라남도 5개 시]
-      { name: "전남 순천시", keywords: ["순천", "순천시"], lat: 34.9507, lng: 127.4872, pop: 278000, desc: "순천만 국가정원 생태수도", level: 12 },
-      { name: "전남 여수시", keywords: ["여수", "여수시"], lat: 34.7604, lng: 127.6622, pop: 272000, desc: "해양관광 및 여수국가산단", level: 12 },
-      { name: "전남 목포시", keywords: ["목포", "목포시"], lat: 34.8118, lng: 126.3922, pop: 213000, desc: "서남해안 해양물류 관문", level: 12 },
-      { name: "전남 광양시", keywords: ["광양", "광양시"], lat: 34.9407, lng: 127.6959, pop: 151000, desc: "포스코 광양제철소 및 광양항", level: 12 },
-      { name: "전남 나주시", keywords: ["나주", "나주시"], lat: 35.0161, lng: 126.7108, pop: 116000, desc: "빛가람 한국전력 혁신도시", level: 12 },
-
-      // [경상북도 10개 시]
-      { name: "경북 포항시", keywords: ["포항", "포항시"], lat: 36.0190, lng: 129.3435, pop: 492000, desc: "포스코 제철산업 특례시", level: 12 },
-      { name: "경북 구미시", keywords: ["구미", "구미시"], lat: 36.1195, lng: 128.3446, pop: 406000, desc: "대한민국 전자산업 중심지", level: 12 },
-      { name: "경북 경산시", keywords: ["경산", "경산시"], lat: 35.8251, lng: 128.7414, pop: 268000, desc: "대구 근교 학원도시", level: 12 },
-      { name: "경북 경주시", keywords: ["경주", "경주시"], lat: 35.8562, lng: 129.2247, pop: 247000, desc: "신라 천년고도 역사유적도시", level: 12 },
-      { name: "경북 안동시", keywords: ["안동", "안동시"], lat: 36.5684, lng: 128.7294, pop: 153000, desc: "경북도청 소재지 및 하회마을", level: 12 },
-      { name: "경북 김천시", keywords: ["김천", "김천시"], lat: 36.1399, lng: 128.1136, pop: 137000, desc: "경북혁신도시 KTX 거점", level: 12 },
-      { name: "경북 영주시", keywords: ["영주", "영주시"], lat: 36.8057, lng: 128.6241, pop: 99000, desc: "소수서원 및 부석사 선비도시", level: 12 },
-      { name: "경북 상주시", keywords: ["상주", "상주시"], lat: 36.4109, lng: 128.1591, pop: 94000, desc: "낙동강 및 상주 곶감 특구", level: 12 },
-      { name: "경북 영천시", keywords: ["영천", "영천시"], lat: 35.9733, lng: 128.9385, pop: 100000, desc: "보현산 천문대 및 말 산업", level: 12 },
-      { name: "경북 문경시", keywords: ["문경", "문경시"], lat: 36.5938, lng: 128.1867, pop: 68000, desc: "문경새재 도립공원 관광도시", level: 12 },
-
-      // [경상남도 8개 시]
-      { name: "경남 창원시", keywords: ["창원", "창원시"], lat: 35.2281, lng: 128.6811, pop: 1009000, desc: "기계산업 메카 특례시", level: 12 },
-      { name: "경남 김해시", keywords: ["김해", "김해시"], lat: 35.2285, lng: 128.8894, pop: 533000, desc: "가야문화권 대도시", level: 12 },
-      { name: "경남 양산시", keywords: ["양산", "양산시"], lat: 35.3350, lng: 129.0373, pop: 353000, desc: "물금신도시 주거 거점", level: 12 },
-      { name: "경남 진주시", keywords: ["진주", "진주시"], lat: 35.1802, lng: 128.1076, pop: 341000, desc: "경남 서부 거점 및 LH 혁신도시", level: 12 },
-      { name: "경남 거제시", keywords: ["거제", "거제시"], lat: 34.8806, lng: 128.6211, pop: 233000, desc: "대우/삼성 조선해양 거점도시", level: 12 },
-      { name: "경남 통영시", keywords: ["통영", "통영시"], lat: 34.8544, lng: 128.4332, pop: 121000, desc: "한려수도 케이블카 해양관광", level: 12 },
-      { name: "경남 사천시", keywords: ["사천", "사천시"], lat: 35.0033, lng: 128.0642, pop: 109000, desc: "우주항공청(KASA) 항공우주도시", level: 12 },
-      { name: "경남 밀양시", keywords: ["밀양", "밀양시"], lat: 35.5038, lng: 128.7466, pop: 101000, desc: "영남루 및 나노융합 산단", level: 12 },
-
-      // [제주도 2개 행정시]
-      { name: "제주 제주시", keywords: ["제주", "제주시"], lat: 33.4996, lng: 126.5312, pop: 491000, desc: "조천읍, 한림읍, 연동 등", level: 12 },
-      { name: "제주 서귀포시", keywords: ["서귀포", "서귀포시"], lat: 33.2541, lng: 126.5601, pop: 182000, desc: "중문관광단지, 성산읍 남부", level: 12 },
-
-      // [소외·인프라 취약 지자체 핵심 데이터 (13대 인프라 정밀 분석)]
-      { name: "경북 영양군", keywords: ["영양", "영양군"], lat: 36.6666, lng: 129.1125, pop: 15800, desc: "전국 최소 인구 자치군. 24시간 응급의료기관 및 산부인과 부재, 고속도로 미경유, 도시가스 미보급 등 대표적인 인프라 복합 소외지", level: 12, infraStatus: "심각", medical: "응급실 전무(보건의료원 의존)", traffic: "철도/고속도로 없음", education: "고교 1개교, 학원 전무", culture: "공연장·영화관 부재", fire: "소방관 1인당 담당 면적 최대", welfare: "독거노인 돌봄 인력 극부족", digital: "5G 미구축 / 인터넷 음영지역", energy: "도시가스 미보급 / LPG 배관망", living: "대형마트 부재 / 면단위 상권 소멸", score: "취약도 96/100" },
-      { name: "전남 신안군", keywords: ["신안", "신안군", "흑산도", "홍도"], lat: 34.8335, lng: 126.3516, pop: 37900, desc: "1004개의 섬으로 구성되어 기상 악화 시 응급환자 닥터헬기/해경 함정 이송 의존, 도서 식수난 및 여객선 결항 잦음", level: 11, infraStatus: "심각", medical: "도서벽지 의료접근 취약", traffic: "도서 연도교 미완 및 선박의존", education: "분교 통폐합 가속", culture: "문화회관 1개소(압해)", fire: "해양 소방 골든타임 40분 초과", welfare: "섬마을 경로당 기반 돌봄", digital: "해저 광케이블 의존 / 통신 불안정", water: "도서 식수원 부족 / 해수담수화 의존", score: "취약도 94/100" },
-      { name: "강원 태백시", keywords: ["태백", "태백시"], lat: 37.1641, lng: 128.9856, pop: 39000, desc: "과거 탄광지대 쇠퇴 및 장성광업소 폐광 이후 일자리 급감. 필수 의료진 부족 및 고속도로 접근성 전국 최하위권", level: 12, infraStatus: "심각", medical: "소아청소년·분만 인프라 붕괴", traffic: "고속도로 접근 1시간 이상", education: "초등학교 통폐합 진행", culture: "영화관 1개소, 도서관 부족", fire: "산악지형 소방차 접근 취약", welfare: "폐광지역 복지관 노후화", digital: "산간 LTE 음영 다수", job: "석탄공사 폐광 이후 일자리 붕괴 위기", score: "취약도 91/100" },
-      { name: "경북 청송군", keywords: ["청송", "청송군", "주왕산"], lat: 36.4357, lng: 129.0573, pop: 24100, desc: "철도 미경유 산간 오지. 종합병원 접근 시간 1시간 이상 소요, 도시가스 보급률 최하위권", level: 12, infraStatus: "위험", medical: "응급의료센터 원거리 위치", traffic: "철도 미운행 / 국도 의존", education: "중학교 2교로 통폐합", culture: "주왕산 외 문화인프라 전무", fire: "산림화재 대응 인력 부족", welfare: "재가복지 서비스 사각지대", digital: "면 지역 통신 음영 광범위", energy: "도시가스 보급률 경북 최하위", score: "취약도 89/100" },
-      { name: "강원 양구군", keywords: ["양구", "양구군"], lat: 38.1098, lng: 127.9897, pop: 21100, desc: "군부대 감축(국방개혁) 및 산간 접경지역으로 철도 및 고속도로 부재, 상업·문화시설 극도 부족", level: 12, infraStatus: "위험", medical: "군 보건소 의존", traffic: "철도 부재 (춘천~속초선 착공)", education: "고교 1개교, 사교육 전무", culture: "공연·전시시설 전무", fire: "접경지 소방출동 제한구역", welfare: "군인 가족복지 외 취약", digital: "접경지 통신규제 지역 존재", score: "취약도 88/100" },
-      { name: "전남 구례군", keywords: ["구례", "구례군", "지리산"], lat: 35.2025, lng: 127.4628, pop: 24700, desc: "지리산 국립공원 배후 산간지역. 응급수술 가능한 대형병원 부족으로 순천/광주 원거리 이송 필요", level: 12, infraStatus: "위험", medical: "응급의료기관 부족", traffic: "KTX 일부정차, 버스노선 축소", education: "초등 분교 폐교 잇따름", culture: "군립도서관 1개소", fire: "산악구조 전담팀 부재", welfare: "농촌 독거노인 긴급돌봄 부족", digital: "산간마을 광대역 미설치", score: "취약도 85/100" },
-      { name: "경북 의성군", keywords: ["의성", "의성군"], lat: 36.3527, lng: 128.6972, pop: 49800, desc: "전국 지자체 중 소멸위험지수 최상위 고위험군. 초고령화(45% 이상)로 복지·간병 인프라 수요 급증하나 인력 태부족", level: 12, infraStatus: "위험", medical: "고령 돌봄인프라 부족", traffic: "중앙선 철도 복선화 진행 중", education: "학령인구 급감으로 학교 축소", culture: "문화시설 예산 전국 최하위", fire: "의용소방대 고령화", welfare: "요양시설 대비 수요 폭증", digital: "면 단위 디지털 교육 사각지대", score: "취약도 87/100" },
-      { name: "강원 정선군", keywords: ["정선", "정선군", "사북"], lat: 37.3807, lng: 128.6608, pop: 34500, desc: "산간 협곡 지형으로 겨울철 폭설 시 육상 교통 고립 위험, 폐광 이후 정주 여건 및 교육 인프라 급감", level: 12, infraStatus: "위험", medical: "의료 취약지", traffic: "태백선 철도 의존 및 산악도로", education: "분교 폐교 / 통학버스 의존", culture: "정선아리랑센터 외 부재", fire: "폭설 시 소방출동 지연", welfare: "폐광촌 사회복지 공백", digital: "산간 협곡 LTE 음영", score: "취약도 86/100" },
-      { name: "전북 무주군", keywords: ["무주", "무주군", "덕유산"], lat: 35.9868, lng: 127.6607, pop: 23200, desc: "내륙 산간 벽지. 대전/전주 등 대도시 3차 병원까지 이동 시간이 길어 중증 응급환자 골든타임 확보 취약", level: 12, infraStatus: "위험", medical: "중증응급 골든타임 취약", traffic: "통영대전고속도로 외 철도 전무", education: "면 단위 초등학교 복식수업", culture: "무주반딧불축제 외 문화시설 한정", fire: "산악지형 화재 대응 지연", welfare: "면 단위 노인복지 사각", digital: "덕유산 인근 통신 불능", score: "취약도 84/100" },
-      { name: "전남 고흥군", keywords: ["고흥", "고흥군"], lat: 34.6111, lng: 127.2847, pop: 61800, desc: "남해안 반도 끝자락에 위치하여 광주 등 거점도시까지 1시간 40분 이상 소요, 고령 인구 비율 최고 수준", level: 12, infraStatus: "위험", medical: "응급·혈액투석 인프라 부족", traffic: "철도 미경유 / 반도형 막다른 교통", education: "면 지역 학교 통폐합 가속", culture: "나로우주센터 외 관광·문화 한정", fire: "해안 지역 소방 접근 취약", welfare: "초고령 돌봄 수요 대비 인력 부족", digital: "해안벽지 통신 음영 다수", score: "취약도 83/100" },
-      { name: "전북 남원시", keywords: ["남원", "남원시"], lat: 35.4164, lng: 127.3903, pop: 77000, desc: "지리산권 거점 시(市)이나 지방의료원 의사 구인난 장기화 및 산간 오지 마을 대중교통 감축", level: 12, infraStatus: "주의", medical: "남원의료원 전문의 구인난", traffic: "전라선 KTX 정차", education: "읍면 지역 학원 부족", culture: "광한루원 등 문화자원 양호", fire: "지리산 산악구조 체계", welfare: "면 단위 방문돌봄 축소", digital: "산간 일부 음영지역", score: "취약도 76/100" },
-      { name: "전북 김제시", keywords: ["김제", "김제시"], lat: 35.8036, lng: 126.8808, pop: 81000, desc: "농촌 고령화 비율 극심, 면 단위 소외 지역 버스 배차간격 길고 청년층 정주 인프라 부족", level: 12, infraStatus: "주의", medical: "전문 병의원 전주 의존", traffic: "호남선 철도 경유", education: "면 단위 학교 통폐합", culture: "벽골제 외 문화시설 부족", fire: "소방 인력 광역 분산", welfare: "농촌 돌봄 취약계층 증가", digital: "농촌 디지털 교육 미비", score: "취약도 74/100" },
-
-      // [교육 소외 대표 지자체]
-      { name: "전북 임실군", keywords: ["임실", "임실군"], lat: 35.6177, lng: 127.2890, pop: 27000, desc: "고등학교 1개교만 운영되어 대부분 학생이 전주·남원으로 통학. 사교육 인프라 전무", level: 12, infraStatus: "위험", medical: "보건의료원 의존", traffic: "철도 미경유 / 국도 의존", education: "고교 1개교, 학원·서점 전무", culture: "치즈마을 체험 외 문화시설 부재", fire: "소방관서 1개소", welfare: "다문화가족 지원 미흡", digital: "면 단위 인터넷 불안정", score: "취약도 82/100" },
-      { name: "전북 장수군", keywords: ["장수", "장수군"], lat: 35.6477, lng: 127.5213, pop: 21500, desc: "해발 300~500m 고원지대. 학원·서점 전무하여 교육 접근성 전국 최하위권", level: 12, infraStatus: "위험", medical: "보건소 1개소 의존", traffic: "고속도로 IC 원거리", education: "학원·서점 전무 / 통학버스 편도 40분", culture: "공연·전시시설 부재", fire: "산간 화재 취약", welfare: "독거노인 비율 40% 초과", digital: "고원지대 통신 음영 광범위", score: "취약도 81/100" },
-      { name: "경북 봉화군", keywords: ["봉화", "봉화군"], lat: 36.8930, lng: 128.7328, pop: 30100, desc: "대학교 전무, 고등학교 2개교. 산간 오지 학생 통학거리 극심하여 기숙사 의존", level: 12, infraStatus: "위험", medical: "보건의료원 1개소", traffic: "영동선 철도 일부 경유", education: "대학교 전무 / 고교 2교 / 사교육 불모지", culture: "분천역 외 관광·문화 한정", fire: "산림화재 빈발지역", welfare: "농촌 아동돌봄 사각지대", digital: "산간 광케이블 미설치 마을 다수", score: "취약도 80/100" },
-
-      // [문화/체육 소외 대표 지자체]
-      { name: "경북 울릉군", keywords: ["울릉", "울릉군", "독도"], lat: 37.4845, lng: 130.9059, pop: 9200, desc: "대한민국 유일 도서(島嶼) 군. 영화관·공연장·체육관 전무, 문화생활은 본토 방문 필수", level: 12, infraStatus: "심각", medical: "울릉병원 1개소 / 응급이송 헬기 의존", traffic: "항공편 미취항(울릉공항 건설중) / 선박 의존", education: "고교 1개교 / 대학 전무", culture: "영화관·공연장·체육관 전무", fire: "도서 소방 인력 극소", welfare: "본토 대비 복지서비스 제한적", digital: "해저케이블 1회선 의존", score: "취약도 95/100" },
-      { name: "경북 영덕군", keywords: ["영덕", "영덕군"], lat: 36.4150, lng: 129.3650, pop: 34800, desc: "동해안 소도시. 상설 공연장·영화관 부재로 문화생활은 포항/영주 의존", level: 12, infraStatus: "위험", medical: "영덕병원 1개소", traffic: "동해선 철도 미개통 구간", education: "고교 2교 / 학원 극소", culture: "상설 공연장·영화관 부재", fire: "해안+산간 이중 취약", welfare: "어촌 고령 돌봄 부족", digital: "해안 산간 통신 불안정", score: "취약도 78/100" },
-      { name: "전북 진안군", keywords: ["진안", "진안군", "마이산"], lat: 35.7917, lng: 127.4267, pop: 23800, desc: "마이산 관광자원 외 문화·체육시설 극도 부족. 종합체육관·공공도서관 미비", level: 12, infraStatus: "위험", medical: "보건의료원 의존", traffic: "철도 미경유 / 국도 의존", education: "면 단위 학교 통폐합", culture: "체육관 부재 / 도서관 1개소", fire: "산간 소방출동 30분 이상", welfare: "귀농·귀촌 정주 지원 미흡", digital: "마이산 인근 통신 불능 구간", score: "취약도 79/100" },
-
-      // [소방/안전 소외 대표 지자체]
-      { name: "인천 옹진군", keywords: ["옹진", "옹진군", "백령도", "연평도"], lat: 37.4463, lng: 126.6358, pop: 19800, desc: "23개 유인도 구성 도서지역. 해상 응급이송 소요시간이 골든타임(1시간)을 초과하는 섬이 다수", level: 11, infraStatus: "심각", medical: "섬별 보건진료소 의존", traffic: "선박 의존 / 기상결항 잦음", education: "섬별 분교 통폐합", culture: "문화시설 전무 (백령도 제외)", fire: "해상 소방 골든타임 1시간 초과 도서 다수", welfare: "섬 주민 긴급복지 접근 극난", digital: "일부 도서 통신 불능", score: "취약도 93/100" },
-      { name: "강원 횡성군", keywords: ["횡성", "횡성군"], lat: 37.4885, lng: 127.9848, pop: 45200, desc: "산간 면적 넓어 소방서에서 원거리 마을까지 출동 30분 이상 소요. 겨울 결빙 시 추가 지연", level: 12, infraStatus: "위험", medical: "횡성병원 1개소", traffic: "영동고속도로 경유", education: "면 단위 학교 감소", culture: "횡성한우축제 외 문화시설 한정", fire: "소방서~원거리 마을 출동 30분 초과", welfare: "산간 독거노인 긴급구조 어려움", digital: "산간 계곡 지역 통신 음영", score: "취약도 77/100" },
-
-      // [복지/돌봄 소외 대표 지자체]
-      { name: "대구 군위군", keywords: ["군위", "군위군"], lat: 36.2428, lng: 128.5728, pop: 22800, desc: "2023년 대구 편입 후에도 고령화율 45% 이상 유지. 노인돌봄 전문인력 극심한 부족", level: 12, infraStatus: "위험", medical: "군위병원 1개소 / 전문의 부족", traffic: "중앙선 철도 경유", education: "고교 1개교", culture: "문화시설 극소", fire: "소방 인력 부족", welfare: "노인돌봄 전문인력 극부족 / 어린이집 감소", digital: "면 단위 디지털 사각지대", score: "취약도 82/100" },
-      { name: "경남 함양군", keywords: ["함양", "함양군", "지리산"], lat: 35.5206, lng: 127.7253, pop: 37200, desc: "지리산 북측 산간 군. 어린이집 폐원 가속으로 면 지역 영유아 양육 환경 극심 악화", level: 12, infraStatus: "위험", medical: "보건의료원 의존", traffic: "통영대전고속도로 일부 경유", education: "면 단위 학교 통폐합 가속", culture: "함양물레방아 외 문화시설 부족", fire: "산악 소방 취약", welfare: "어린이집 폐원 가속 / 노인복지 인력 부족", digital: "산간 마을 인터넷 미비", score: "취약도 80/100" },
-
-      // [통신/디지털 소외 대표 지자체]
-      { name: "강원 영월군", keywords: ["영월", "영월군"], lat: 37.1837, lng: 128.4615, pop: 37600, desc: "석회암 협곡 지형으로 5G 기지국 설치 난이도 높아 광범위한 통신 음영지역 존재", level: 12, infraStatus: "위험", medical: "영월의료원 1개소", traffic: "중앙선 철도 / 38번 국도", education: "면 단위 분교 폐교", culture: "김삿갓면 문화자원 양호", fire: "협곡 산악 소방 취약", welfare: "탄광촌 사회복지 공백", digital: "5G 미구축 / 석회암 협곡 LTE 음영 광범위", score: "취약도 79/100" },
-      { name: "전남 화순군", keywords: ["화순", "화순군"], lat: 35.0644, lng: 126.9863, pop: 60500, desc: "광주 인접이나 면 단위 산간마을은 디지털 접근성 극도 취약. 고령층 디지털 소외 심각", level: 12, infraStatus: "주의", medical: "화순전대병원 연계 양호", traffic: "광주 생활권 / 호남선 경유", education: "면 단위 학교 감소", culture: "고인돌유적 등 문화자원 양호", fire: "소방 인프라 보통", welfare: "광주 연계 복지 가능", digital: "면 단위 고령층 디지털 소외 / 산간마을 광대역 미설치", score: "취약도 68/100" },
-
-      // [상수도/수자원 소외 대표 지자체]
-      { name: "전남 완도군", keywords: ["완도", "완도군", "보길도", "청산도"], lat: 34.3110, lng: 126.7550, pop: 46800, desc: "도서 가뭄 시 제한급수 상습 발생. 지하수 저류지 부족으로 식수 공급 불안정", level: 11, infraStatus: "심각", water: "도서 가뭄 제한급수 빈발 / 해수담수화 의존", score: "취약도 92/100" },
-      { name: "전남 진도군", keywords: ["진도", "진도군"], lat: 34.4868, lng: 126.2634, pop: 29500, desc: "광역상수도 미보급 도서지역 다수. 마을 간이상수도 및 지하수 관정 의존", level: 12, infraStatus: "위험", water: "간이상수도 의존률 고위험 / 도서 식수난", score: "취약도 86/100" },
-
-      // [에너지/난방 소외 대표 지자체]
-      { name: "강원 인제군", keywords: ["인제", "인제군"], lat: 38.0697, lng: 128.1706, pop: 32000, desc: "겨울철 영하 20도 혹한기 지역이나 도시가스 미공급 지역 넓어 등유·LPG 고비용 난방 의존", level: 12, infraStatus: "위험", energy: "도시가스 미보급 / 혹한기 난방비 부담 가중", score: "취약도 87/100" },
-
-      // [생활/필수편의상권 소외 대표 지자체]
-      { name: "경남 의령군", keywords: ["의령", "의령군"], lat: 35.3222, lng: 128.2618, pop: 25600, desc: "대형마트 및 24시간 생활편의시설 전무. 생필품 구매 시 진주·창원 원거리 이동 필요", level: 12, infraStatus: "위험", living: "대형마트·금융점포 부재 / 장보기 이동 40분", score: "취약도 85/100" },
-      { name: "경남 산청군", keywords: ["산청", "산청군"], lat: 35.4154, lng: 127.8735, pop: 33800, desc: "지리산권 산간 자치군으로 읍내 외 면 지역 슈퍼·편의점 소멸 가속", level: 12, infraStatus: "위험", living: "면 단위 상권 붕괴 / 식료품 사막화 현상", score: "취약도 83/100" },
-      { name: "전남 곡성군", keywords: ["곡성", "곡성군"], lat: 35.2820, lng: 127.2921, pop: 26800, desc: "은행·우체국 창구 통폐합 및 청년 외식상권 부재로 정주 편의성 악화", level: 12, infraStatus: "주의", living: "금융창구 축소 / 생활필수점포 감소", score: "취약도 77/100" },
-
-      // [환경/생태·재해대응 취약 지자체]
-      { name: "경북 울진군", keywords: ["울진", "울진군"], lat: 36.9931, lng: 129.4005, pop: 46700, desc: "동해안 대형산불 고위험 지대. 원전 밀집지이자 험준한 산악으로 복합 재해대응 취약", level: 12, infraStatus: "위험", environment: "동해안 대형산불 위험지구 / 산악 방재 취약", score: "취약도 88/100" },
-      { name: "강원 삼척시", keywords: ["삼척", "삼척시"], lat: 37.4499, lng: 129.1652, pop: 63000, desc: "산불 및 동해안 태풍 침수 복합 취약지역. 산악 면적 80% 이상으로 방재 골든타임 확보 애로", level: 12, infraStatus: "위험", environment: "산불·해안침수 복합 재해 취약지", score: "취약도 82/100" },
-      { name: "경남 합천군", keywords: ["합천", "합천군"], lat: 35.5667, lng: 128.1657, pop: 41800, desc: "황강 유역 하천 범람 및 산사태 위험지구 다수 분포. 자연재해 노출도 높음", level: 12, infraStatus: "주의", environment: "하천 범람·산사태 재해위험구역 분포", score: "취약도 76/100" },
-
-      // [일자리/산업기반 소외 대표 지자체]
-      { name: "전남 보성군", keywords: ["보성", "보성군"], lat: 34.7715, lng: 127.0799, pop: 38200, desc: "1차 농어업 편중으로 20~30대 양질의 제조업·IT 청년 일자리 전무", level: 12, infraStatus: "위험", job: "제조업 전무 / 농어업 편중 청년 일자리 부재", score: "취약도 84/100" },
-      { name: "경북 영천시", keywords: ["영천", "영천시"], lat: 35.9733, lng: 128.9386, pop: 101000, desc: "대구·포항 배후 산단 노후화 및 첨단산업 유치 부진으로 청년층 인구 역외 유출", level: 12, infraStatus: "주의", job: "전통 뿌리산단 노후화 / 미래신산업 부족", score: "취약도 72/100" },
-
-      // [대표 읍·면·동·리 정밀 분석 데이터베이스]
-      // 수도권 주요 읍·면·동
-      { name: "서울 강남구 역삼동", keywords: ["역삼동", "역삼", "테헤란로"], lat: 37.5007, lng: 127.0368, pop: 74200, desc: "전국 최고 수준의 의료·지하철·금융·상업 인프라 집중 지역", level: 14, infraStatus: "최상", medical: "강남세브란스 등 3차병원 밀집", traffic: "지하철 2호선/신분당선", score: "인프라 최상" },
-      { name: "서울 강남구 대치동", keywords: ["대치동", "대치", "은마아파트"], lat: 37.4946, lng: 127.0628, pop: 83500, desc: "전국 최대 사교육 학원가 밀집 지역", level: 14, infraStatus: "최상", education: "대치동 학원가 특화", score: "교육 인프라 최상" },
-      { name: "서울 종로구 가회동", keywords: ["가회동", "북촌", "삼청동"], lat: 37.5828, lng: 126.9838, pop: 4100, desc: "북촌한옥마을 전통 문화 주거지구", level: 15, infraStatus: "양호", medical: "서울대병원 접근 용이", traffic: "안국역 연계", score: "문화 인프라 풍부" },
-      { name: "서울 마포구 서교동", keywords: ["서교동", "홍대입구", "합정"], lat: 37.5534, lng: 126.9205, pop: 27800, desc: "홍대 젊음의 거리 중심 청년 문화·상권 밀집지", level: 15, infraStatus: "양호", culture: "공연장·전시 복합상권", traffic: "2호선·공항철도", score: "문화/상권 최상" },
-      { name: "서울 송파구 잠실동", keywords: ["잠실동", "잠실", "잠실새내"], lat: 37.5133, lng: 127.0844, pop: 112000, desc: "롯데월드타워 및 잠실 대단지 아파트 거점", level: 14, infraStatus: "최상", traffic: "2호선/9호선 환승", score: "인프라 최상" },
-      { name: "서울 노원구 상계동", keywords: ["상계동", "상계", "노원역"], lat: 37.6593, lng: 127.0682, pop: 198000, desc: "서울 동북부 최대 대단지 주거지구", level: 14, infraStatus: "양호", traffic: "4호선/7호선 환승", score: "주거 인프라 우수" },
-      { name: "경기 남양주시 화도읍", keywords: ["화도읍", "화도", "마석"], lat: 37.6653, lng: 127.3075, pop: 114500, desc: "전국 최대 인구 읍. 수도권 동부 광역교통 확충 진행 중", level: 14, infraStatus: "양호", medical: "수도권 종합병원 접근 용이", traffic: "경춘선 마석역 및 광역버스망", score: "인프라 풍부" },
-      { name: "경기 남양주시 진접읍", keywords: ["진접읍", "진접", "장현"], lat: 37.7214, lng: 127.1856, pop: 95200, desc: "4호선 진접선 연장 개통 거점 읍", level: 14, infraStatus: "양호", traffic: "진접선 전철", score: "교통 개선" },
-      { name: "경기 남양주시 와부읍", keywords: ["와부읍", "와부", "덕소"], lat: 37.5878, lng: 127.2144, pop: 59400, desc: "한강변 덕소역세권 주거 거점 읍", level: 14, infraStatus: "양호", traffic: "경의중앙선 덕소역", score: "정주여건 양호" },
-      { name: "경기 남양주시 오남읍", keywords: ["오남읍", "오남", "양지리"], lat: 37.7028, lng: 127.2038, pop: 52100, desc: "오남저수지 및 4호선 오남역세권 거점 읍", level: 14, infraStatus: "보통", traffic: "4호선 오남역", score: "주거 거점" },
-      { name: "경기 남양주시 다산동", keywords: ["다산동", "다산", "다산신도시"], lat: 37.6085, lng: 127.1556, pop: 98000, desc: "다산신도시 행정·사법 복합 주거지구", level: 14, infraStatus: "최상", traffic: "8호선 연장 별내선", score: "신도시 인프라" },
-      { name: "경기 화성시 봉담읍", keywords: ["봉담읍", "봉담"], lat: 37.2185, lng: 126.9458, pop: 89000, desc: "대학교 및 신축 택지지구 밀집 급성장 읍", level: 14, infraStatus: "양호", traffic: "수인분당선 오목천역 연계", education: "협성대·장안대 인근", score: "정주여건 양호" },
-      { name: "경기 화성시 향남읍", keywords: ["향남읍", "향남", "발안"], lat: 37.1322, lng: 126.9213, pop: 87600, desc: "향남제약공단 및 서해선 향남역 개통 거점 읍", level: 14, infraStatus: "양호", job: "제약산단 밀집", traffic: "서해선 복선전철", score: "산업 거점" },
-      { name: "경기 화성시 남양읍", keywords: ["남양읍", "남양", "화성시청"], lat: 37.2114, lng: 126.8166, pop: 44200, desc: "화성시청 소재지 및 현대차 남양연구소 배후 읍", level: 14, infraStatus: "양호", job: "연구단지 배후", score: "행정 거점" },
-      { name: "경기 화성시 동탄동", keywords: ["동탄동", "동탄", "동탄1동", "동탄2동"], lat: 37.2023, lng: 127.0988, pop: 400000, desc: "동탄1·2 신도시 통합 행정동 및 GTX-A 동탄역 거점", level: 13, infraStatus: "최상", traffic: "GTX-A 동탄역 및 SRT", score: "초대형 신도시" },
-      { name: "경기 평택시 안중읍", keywords: ["안중읍", "안중", "서평택"], lat: 36.9885, lng: 126.9242, pop: 43800, desc: "서해선 복선전철 안중역 거점 읍", level: 14, infraStatus: "보통", traffic: "서해선 안중역", score: "서평택 거점" },
-      { name: "경기 평택시 포승읍", keywords: ["포승읍", "포승", "평택항"], lat: 36.9856, lng: 126.8432, pop: 23100, desc: "평택항 국제여객터미널 및 국가산단 배후 읍", level: 14, infraStatus: "주의", job: "평택항 항만물류", score: "항만 산단" },
-      { name: "경기 평택시 고덕동", keywords: ["고덕동", "고덕", "고덕신도시"], lat: 37.0252, lng: 127.0514, pop: 35000, desc: "삼성전자 평택캠퍼스 및 고덕국제화신도시", level: 14, infraStatus: "최상", job: "삼성전자 반도체", score: "반도체 허브" },
-      { name: "경기 용인시 포곡읍", keywords: ["포곡읍", "포곡", "에버랜드"], lat: 37.2842, lng: 127.2215, pop: 34100, desc: "에버랜드 소재 및 에버라인 전철 종점 읍", level: 14, infraStatus: "보통", culture: "에버랜드 관광", traffic: "용인경전철 전대·에버랜드역", score: "관광 거점" },
-      { name: "경기 광주시 초월읍", keywords: ["초월읍", "초월", "도평리"], lat: 37.4098, lng: 127.3012, pop: 47000, desc: "경강선 초월역 개통으로 판교·강남 접근성 대폭 개선 읍", level: 14, infraStatus: "양호", traffic: "경강선 초월역", score: "역세권 주거" },
-      { name: "경기 포천시 소흘읍", keywords: ["소흘읍", "소흘", "송우리"], lat: 37.8285, lng: 127.1422, pop: 44000, desc: "포천시 최대 인구 읍 및 송우리 중심 상권", level: 14, infraStatus: "보통", traffic: "구리포천고속도로", living: "송우 패션상권", score: "포천 경제중심" },
-      { name: "경기 이천시 부발읍", keywords: ["부발읍", "부발", "신하리"], lat: 37.2625, lng: 127.4912, pop: 39000, desc: "SK하이닉스 이천공장 본사 및 경강선/중부내륙선 부발역", level: 14, infraStatus: "양호", job: "SK하이닉스 반도체", traffic: "경강선·KTX 부발역", score: "반도체 핵심" },
-      { name: "경기 양평군 용문면", keywords: ["용문면", "용문", "용문산"], lat: 37.4988, lng: 127.5878, pop: 18500, desc: "경의중앙선 종점 관광·전원주거 면. 면 단위 인프라 양호", level: 14, infraStatus: "보통", traffic: "경의중앙선 용문역", living: "전원 상권", score: "교통 양호" },
-      { name: "경기 파주시 문산읍", keywords: ["문산읍", "문산", "임진각"], lat: 37.8583, lng: 126.7845, pop: 49000, desc: "경의선 북단 접경 거점 읍. 통일로 및 철도 종점권", level: 14, infraStatus: "주의", traffic: "경의선 전철 문산역", fire: "접경지 소방 대응", score: "접경 거점" },
-
-      // 충청권 주요 읍·면·동
-      { name: "충남 아산시 배방읍", keywords: ["배방읍", "배방", "천안아산역"], lat: 36.7725, lng: 127.0588, pop: 86500, desc: "KTX 천안아산역 및 신도시 배후 대규모 읍", level: 14, infraStatus: "양호", traffic: "KTX·SRT 천안아산역 인접", score: "광역교통 허브" },
-      { name: "충남 아산시 탕정면", keywords: ["탕정면", "탕정", "삼성디스플레이"], lat: 36.8042, lng: 127.0592, pop: 44800, desc: "삼성디스플레이시티 및 신도시 개발 급성장 면", level: 14, infraStatus: "양호", job: "삼성디스플레이 산단", traffic: "1호선 탕정역", score: "첨단산단 면" },
-      { name: "충남 서산시 대산읍", keywords: ["대산읍", "대산", "대산공단"], lat: 36.9388, lng: 126.4312, pop: 13500, desc: "국내 3대 석유화학공단 배후 읍. 대형 중화학 산단 대비 응급의료·대중교통 부족", level: 14, infraStatus: "주의", fire: "산단 화학재해 위험", traffic: "철도 미경유 / 국도 정체", score: "산단형 읍" },
-      { name: "충남 홍성군 홍북읍", keywords: ["홍북읍", "홍북", "내포신도시"], lat: 36.6542, lng: 126.6712, pop: 31000, desc: "충남도청 소재 내포신도시 거점 읍", level: 14, infraStatus: "양호", traffic: "서해선 복선전철 홍성역 연계", score: "도청신도시" },
-      { name: "충남 예산군 예산읍", keywords: ["예산읍", "예산", "예산상설시장"], lat: 36.6815, lng: 126.8458, pop: 33000, desc: "백종원 시장 프로젝트 활성화 예산상설시장 거점 읍", level: 14, infraStatus: "보통", culture: "전통시장 재생", traffic: "장항선 예산역", score: "상권 활성화" },
-      { name: "충남 태안군 안면읍", keywords: ["안면읍", "안면도", "방포"], lat: 36.5684, lng: 126.3533, pop: 8900, desc: "안면도 중심 읍. 관광 인프라 양호하나 비수기 의료·복지 사각", level: 14, infraStatus: "위험", medical: "응급실 원거리", traffic: "도서 연륙형 도로 의존", score: "취약도 79/100" },
-      { name: "충북 청주시 오창읍", keywords: ["오창읍", "오창", "오창과학산단"], lat: 36.7118, lng: 127.4225, pop: 70000, desc: "LG에너지솔루션 등 2차전지 배터리 메카 및 방사광가속기 입지", level: 14, infraStatus: "최상", job: "2차전지 산단", score: "첨단과학 허브" },
-      { name: "충북 청주시 오송읍", keywords: ["오송읍", "오송", "오송바이오폴리스"], lat: 36.6212, lng: 127.3245, pop: 26000, desc: "KTX 경부·호남 분기 오송역 및 첨단의료복합단지", level: 14, infraStatus: "양호", traffic: "KTX 오송역", medical: "바이오클러스터", score: "바이오 국가산단" },
-      { name: "충북 진천군 덕산읍", keywords: ["덕산읍", "덕산", "충북혁신도시"], lat: 36.9015, lng: 127.5312, pop: 31000, desc: "충북혁신도시 배후 공공기관 밀집 신흥 읍", level: 14, infraStatus: "양호", education: "혁신도시 교육특구", score: "혁신도시 거점" },
-      { name: "충북 단양군 매포읍", keywords: ["매포읍", "매포", "도담삼봉"], lat: 37.0425, lng: 128.3242, pop: 5400, desc: "시멘트 산업 분지 읍. 분진 환경 취약 및 고령화 심각", level: 14, infraStatus: "위험", environment: "분진 환경 취약", education: "학생수 급감", score: "취약도 81/100" },
-      { name: "충북 영동군 추풍령면", keywords: ["추풍령면", "추풍령"], lat: 36.2165, lng: 127.9942, pop: 2200, desc: "백두대간 고갯마루 면. 경부선 간이역 소재하나 생활상권 소멸", level: 14, infraStatus: "위험", living: "생필품 상점 축소", medical: "보건지소 의존", score: "취약도 83/100" },
-
-      // 전라권 주요 읍·면·동
-      { name: "전북 완주군 봉동읍", keywords: ["봉동읍", "봉동", "완주산단"], lat: 35.9412, lng: 127.1645, pop: 26000, desc: "현대자동차 전주공장 배후 완주테크노밸리 거점 읍", level: 14, infraStatus: "양호", job: "상용차 제조공단", score: "산업 거점" },
-      { name: "전북 완주군 삼례읍", keywords: ["삼례읍", "삼례", "우석대학교"], lat: 35.9125, lng: 127.0712, pop: 15000, desc: "삼례문화예술촌 및 우석대학교 소재 역사문화 읍", level: 14, infraStatus: "보통", culture: "예술촌 재생", education: "우석대", score: "문화예술 읍" },
-      { name: "전남 무안군 삼향읍", keywords: ["삼향읍", "남악", "남악신도시"], lat: 34.8152, lng: 126.4625, pop: 35000, desc: "전남도청 소재 남악신도시 중심 행정 읍", level: 14, infraStatus: "양호", traffic: "목포 연접 광역도로", score: "도청소재지" },
-      { name: "전남 무안군 일로읍", keywords: ["일로읍", "오룡", "오룡신도시"], lat: 34.8415, lng: 126.4912, pop: 19000, desc: "오룡지구 신도시 개발로 청년 가구 급증 거점 읍", level: 14, infraStatus: "양호", education: "신설 학군", score: "신흥 주거" },
-      { name: "전남 화순군 화순읍", keywords: ["화순읍", "화순", "전남대병원"], lat: 35.0612, lng: 126.9855, pop: 40000, desc: "화순전남대학교병원 암센터 및 광주 위성 거점 읍", level: 14, infraStatus: "양호", medical: "화순전남대병원 3차의료", score: "의료 거점" },
-      { name: "전남 신안군 흑산면", keywords: ["흑산면", "흑산도", "홍도"], lat: 34.6836, lng: 125.4355, pop: 3800, desc: "목포항에서 뱃길 2시간 먼바다 도서 면. 기상 악화 시 완전 고립 위험", level: 13, infraStatus: "심각", medical: "응급헬기 의존 / 골든타임 2시간", traffic: "풍랑주의보 잦은 결항", water: "식수 해수담수화 의존", score: "취약도 97/100" },
-      { name: "전남 완도군 보길면", keywords: ["보길면", "보길도", "세연정"], lat: 34.1523, lng: 126.5518, pop: 2600, desc: "고산 윤선도 유적 도서 면. 상습 가뭄으로 제한급수 빈발", level: 14, infraStatus: "심각", water: "도서 가뭄 극심 / 간이급수", medical: "공중보건의 1인 의존", score: "취약도 93/100" },
-      { name: "전남 구례군 산동면", keywords: ["산동면", "산동", "지리산온천"], lat: 35.3188, lng: 127.4725, pop: 3100, desc: "지리산 서북능선 산간 분지 면. 산수유 마을이나 겨울철 응급이송 곤란", level: 14, infraStatus: "위험", medical: "야간 응급 진료 불가", fire: "산악 화재 취약", score: "취약도 84/100" },
-      { name: "전북 무주군 설천면", keywords: ["설천면", "설천", "무주리조트"], lat: 35.9612, lng: 127.7785, pop: 4100, desc: "덕유산국립공원 배후 면. 스키 관광지이나 면 주민 정주 의료 인프라 미비", level: 14, infraStatus: "위험", medical: "3차병원 이동 1시간 이상", energy: "산간 고비용 난방", score: "취약도 82/100" },
-      { name: "전북 순창군 복흥면", keywords: ["복흥면", "복흥", "추령"], lat: 35.4523, lng: 126.9325, pop: 2300, desc: "노령산맥 산간 고원 면. 겨울철 폭설 고립 잦고 버스 배차간격 김", level: 14, infraStatus: "위험", traffic: "대중교통 1일 3~4회", welfare: "독거노인 비율 45%", score: "취약도 85/100" },
-
-      // 경상권 주요 읍·면·동
-      { name: "경남 양산시 물금읍", keywords: ["물금읍", "물금", "양산부산대병원"], lat: 35.3214, lng: 129.0085, pop: 120500, desc: "전국 최다 인구 읍(12만명 돌파). 양산부산대병원 및 부산 2호선", level: 14, infraStatus: "최상", medical: "양산부산대병원 3차병원", traffic: "부산지하철 2호선", score: "전국 최대 읍" },
-      { name: "경남 김해시 진영읍", keywords: ["진영읍", "진영", "봉하마을"], lat: 35.3155, lng: 128.7342, pop: 56000, desc: "봉하마을 및 진영신도시 거점 대규모 읍", level: 14, infraStatus: "양호", traffic: "KTX 진영역", culture: "봉하마을", score: "신도시 읍" },
-      { name: "경남 창원시 마산회원구 내서읍", keywords: ["내서읍", "내서", "중리"], lat: 35.2542, lng: 128.5125, pop: 61000, desc: "창원시 마산 서부 대규모 주거단지 거점 읍", level: 14, infraStatus: "양호", traffic: "경전선 중리역", score: "주거 거점" },
-      { name: "부산 기장군 정관읍", keywords: ["정관읍", "정관", "정관신도시"], lat: 35.3215, lng: 129.1788, pop: 81000, desc: "정관신도시 계획도시 대단지 거점 읍", level: 14, infraStatus: "양호", education: "초중고 다수 밀집", score: "신도시 거점" },
-      { name: "부산 기장군 기장읍", keywords: ["기장읍", "기장", "오시리아"], lat: 35.2442, lng: 129.2135, pop: 52000, desc: "오시리아 관광단지(롯데월드) 및 동해선 기장역", level: 14, infraStatus: "양호", culture: "테마파크 관광", traffic: "동해선 광역전철", score: "해양관광 읍" },
-      { name: "울산 울주군 범서읍", keywords: ["범서읍", "범서", "구영리", "천상리"], lat: 35.5685, lng: 129.2345, pop: 69000, desc: "UNIST 울산과기원 배후 및 구영·천상 신주거 읍", level: 14, infraStatus: "양호", education: "UNIST 인접", score: "학군 주거 읍" },
-      { name: "대구 달성군 다사읍", keywords: ["다사읍", "다사", "대실역"], lat: 35.8645, lng: 128.4612, pop: 92000, desc: "대구 2호선 역세권 9만 인구 거대 읍", level: 14, infraStatus: "최상", traffic: "대구 2호선 대실역·다사역", score: "대도시 역세권" },
-      { name: "경북 칠곡군 왜관읍", keywords: ["왜관읍", "왜관", "왜관역"], lat: 35.9925, lng: 128.3985, pop: 32000, desc: "칠곡군청 소재지 및 경부선 왜관역 역세권 거점 읍", level: 14, infraStatus: "양호", traffic: "경부선 왜관역", score: "군청 소재 읍" },
-      { name: "경북 칠곡군 석적읍", keywords: ["석적읍", "석적", "남율리"], lat: 36.0355, lng: 128.3842, pop: 31000, desc: "구미국가산단 배후 청년 근로자 대단지 읍", level: 14, infraStatus: "보통", job: "구미산단 배후", score: "청년 주거 읍" },
-      { name: "경북 예천군 호명읍", keywords: ["호명읍", "호명", "경북도청신도시"], lat: 36.5755, lng: 128.5142, pop: 21000, desc: "경북도청 이전으로 읍으로 승격된 신도시 읍", level: 14, infraStatus: "양호", score: "도청 소재 읍" },
-      { name: "경북 울릉군 울릉읍", keywords: ["울릉읍", "도동", "저동"], lat: 37.4842, lng: 130.9035, pop: 6500, desc: "울릉도 중심 읍. 여객선 터미널 소재하나 의료·고등교육 본토 의존", level: 14, infraStatus: "심각", medical: "울릉군의료원 전문의 부족", culture: "영화관·공연장 부재", score: "취약도 94/100" },
-      { name: "경북 울릉군 북면", keywords: ["북면", "천부리", "나리분지"], lat: 37.5285, lng: 130.8712, pop: 1350, desc: "울릉도 북측 해안 및 나리분지 면. 본토 연결 및 응급의료 극도 취약", level: 14, infraStatus: "심각", traffic: "일주도로 낙석 위험", digital: "일부 해안 통신 음영", score: "취약도 96/100" },
-      { name: "경북 영양군 수비면", keywords: ["수비면", "수비", "국제밤하늘보호공원"], lat: 36.7825, lng: 129.2155, pop: 1600, desc: "아시아 최초 국제밤하늘보호공원 산간 면. 빛공해 제로이나 생필품·의료 사막지대", level: 14, infraStatus: "심각", medical: "약국·의원 전무", living: "슈퍼마켓 부재 / 식료품 사막화", score: "취약도 95/100" },
-      { name: "경북 청송군 주왕산면", keywords: ["주왕산면", "주왕산"], lat: 36.3812, lng: 129.1352, pop: 1800, desc: "주왕산국립공원 산간 면. 초고령화(50% 육박)로 재가돌봄 시급", level: 14, infraStatus: "위험", welfare: "돌봄인력 태부족", traffic: "버스 노선 축소", score: "취약도 88/100" },
-      { name: "경남 하동군 화개면", keywords: ["화개면", "화개장터", "쌍계사"], lat: 35.1952, lng: 127.6045, pop: 3200, desc: "지리산 남부 섬진강 계곡 면. 관광철 교통혼잡 대비 평시 의료 취약", level: 14, infraStatus: "위험", medical: "순천/진주 병원 의존", fire: "산악 급경사 화재 취약", score: "취약도 81/100" },
-      { name: "경남 거창군 고제면", keywords: ["고제면", "고제", "삼봉산"], lat: 35.8015, lng: 127.8845, pop: 1380, desc: "덕유산 자락 고랭지 사과 산간 면. 학령인구 소멸로 폐교 위기", level: 14, infraStatus: "위험", education: "초등학교 전교생 10명 미만", welfare: "고령 독거가구 다수", score: "취약도 86/100" },
-
-      // 강원권 산간·해안 읍·면·리
-      { name: "강원 정선군 사북읍", keywords: ["사북읍", "사북", "강원랜드"], lat: 37.2285, lng: 128.8188, pop: 4800, desc: "폐광지 대체산업 강원랜드 배후 읍. 산악 협곡 고립형 지형", level: 14, infraStatus: "위험", medical: "응급의료 취약지", traffic: "태백선 사북역 / 산악 험로", living: "상권 축소", score: "취약도 85/100" },
-      { name: "강원 정선군 고한읍", keywords: ["고한읍", "고한", "하이원"], lat: 37.2023, lng: 128.8523, pop: 4400, desc: "해발 700m 고지대 읍. 겨울철 결빙 및 폭설 교통 취약", level: 14, infraStatus: "위험", energy: "혹한기 난방부담 극심", medical: "전문의 부재", score: "취약도 86/100" },
-      { name: "강원 평창군 대관령면", keywords: ["대관령면", "대관령", "횡계"], lat: 37.6742, lng: 128.7118, pop: 6100, desc: "해발 800m 고원지대. 동계스포츠 메카이나 혹한기 생활인프라 주의", level: 14, infraStatus: "주의", traffic: "KTX 진부역 연계", energy: "겨울철 난방 취약", score: "산간 고원" },
-      { name: "강원 삼척시 원덕읍", keywords: ["원덕읍", "원덕", "호산항"], lat: 37.1812, lng: 129.3375, pop: 5100, desc: "삼척 남단 경북 경계 읍. LNG 생산기지 입지이나 생활·의료 인프라 원거리", level: 14, infraStatus: "위험", medical: "종합병원 이송 40분", fire: "산불·해안방재 취약", score: "취약도 80/100" },
-      { name: "강원 화천군 사내면", keywords: ["사내면", "사내", "사창리"], lat: 38.0772, lng: 127.5255, pop: 6300, desc: "군부대 해체(27사단) 이후 인구 급감 및 상권 붕괴 위기 면", level: 14, infraStatus: "위험", living: "군인 상권 붕괴 / 식료품 접근 취약", traffic: "산악 험로", score: "취약도 84/100" },
-
-      // 제주권 읍·면·동
-      { name: "제주 제주시 애월읍", keywords: ["애월읍", "애월", "한담해변"], lat: 33.4632, lng: 126.3288, pop: 38000, desc: "제주 서부 최대 인구 읍 및 해안 카페거리 관광 중심", level: 14, infraStatus: "양호", culture: "해안 카페거리", traffic: "일주서로 연계", score: "관광 거점" },
-      { name: "제주 제주시 한림읍", keywords: ["한림읍", "한림", "협재해수욕장"], lat: 33.4112, lng: 126.2655, pop: 21200, desc: "협재·금능해수욕장 및 한림항 소재 서부 거점 읍", level: 14, infraStatus: "보통", traffic: "한림항 연계", score: "항만·관광" },
-      { name: "제주 제주시 구좌읍", keywords: ["구좌읍", "구좌", "월정리", "세화"], lat: 33.5225, lng: 126.8522, pop: 15400, desc: "월정리·세화 해변 및 당근 특화 농업 읍", level: 14, infraStatus: "보통", score: "동부 농경·관광" },
-      { name: "제주 제주시 노형동", keywords: ["노형동", "노형", "드림타워"], lat: 33.4842, lng: 126.4812, pop: 56000, desc: "제주 드림타워 및 신제주 상업·금융·주거 최고 중심지", level: 14, infraStatus: "최상", medical: "한라병원 인접", traffic: "제주공항 10분", score: "제주 최고도심" },
-      { name: "제주 제주시 조천읍", keywords: ["조천읍", "조천", "함덕"], lat: 33.5358, lng: 126.6344, pop: 25800, desc: "제주 동부 전원 주거 읍. 제주시 도심 인프라 30분 생활권", level: 14, infraStatus: "양호", medical: "제주대병원 연계", traffic: "일주동로 연계", score: "인프라 보통" },
-      { name: "제주 서귀포시 대정읍", keywords: ["대정읍", "대정", "모슬포", "영어교육도시"], lat: 33.2268, lng: 126.2514, pop: 24000, desc: "영어교육도시 및 모슬포항 소재 서남부 거점 읍", level: 14, infraStatus: "양호", education: "국제학교 밀집", traffic: "모슬포 연계", score: "교육 인프라 특화" },
-      { name: "제주 서귀포시 남원읍", keywords: ["남원읍", "남원", "위미"], lat: 33.2805, lng: 126.7188, pop: 18400, desc: "감귤 주산지 및 서귀포 동남부 거점 읍", level: 14, infraStatus: "보통", score: "감귤 특구" },
-      { name: "제주 서귀포시 성산읍", keywords: ["성산읍", "성산", "성산일출봉"], lat: 33.3855, lng: 126.8788, pop: 15500, desc: "성산일출봉 관광 거점 읍. 제주시/서귀포시 도심에서 1시간 소요", level: 14, infraStatus: "주의", medical: "응급의료센터 원거리", traffic: "동부 순환버스 의존", score: "동부 관광 거점" },
-      { name: "제주 제주시 추자면", keywords: ["추자면", "추자도", "상추자"], lat: 33.9585, lng: 126.2975, pop: 1600, desc: "제주 본섬과 전남 해남 사이 절해고도 면. 기상 악화 시 해상교통 두절", level: 13, infraStatus: "심각", medical: "응급환자 해경경비정/헬기 이송", traffic: "여객선 결항 빈발", score: "취약도 95/100" },
-      { name: "제주 조천읍 와산리", keywords: ["와산리", "와산"], lat: 33.4912, lng: 126.6578, pop: 1080, desc: "중산간 농촌 마을로 대중교통 배차간격 길어 자가용 필수", level: 15, infraStatus: "주의", medical: "조천보건지소 의존", traffic: "순환 버스 의존", score: "교통 소외" }
+      { name: "경북 영양군", keywords: ["영양", "영양군"], lat: 36.6666, lng: 129.1125, pop: 15800, desc: "전국 최소 인구 자치군. 24시간 응급의료기관 및 산부인과 부재", level: 12, infraStatus: "심각", medical: "응급실 전무", traffic: "철도/고속도로 없음", score: 96 },
+      { name: "전남 신안군", keywords: ["신안", "신안군"], lat: 34.8335, lng: 126.3516, pop: 37900, desc: "1004개의 섬으로 구성되어 응급환자 이송 취약", level: 11, infraStatus: "심각", medical: "도서벽지 의료접근 취약", score: 94 },
+      { name: "강원 태백시", keywords: ["태백", "태백시"], lat: 37.1641, lng: 128.9856, pop: 39000, desc: "장성광업소 폐광 이후 일자리 급감 및 필수 의료진 부족", level: 12, infraStatus: "심각", medical: "소아청소년·분만 인프라 붕괴", score: 91 },
+      { name: "경북 청송군", keywords: ["청송", "청송군"], lat: 36.4357, lng: 129.0573, pop: 24100, desc: "철도 미경유 산간 오지. 종합병원 접근 시간 1시간 이상", level: 12, infraStatus: "위험", traffic: "철도 미운행", score: 89 },
+      { name: "경북 울릉군", keywords: ["울릉", "울릉군"], lat: 37.4845, lng: 130.9059, pop: 9200, desc: "대한민국 유일 도서 군. 영화관·공연장·체육관 전무", level: 12, infraStatus: "심각", culture: "문화시설 전무", score: 95 },
+      { name: "인천 옹진군", keywords: ["옹진", "옹진군"], lat: 37.4463, lng: 126.6358, pop: 19800, desc: "해상 응급이송 소요시간 골든타임 초과", level: 11, infraStatus: "심각", fire: "해상 소방 골든타임 초과", score: 93 },
+      { name: "전남 완도군", keywords: ["완도", "완도군"], lat: 34.3110, lng: 126.7550, pop: 46800, desc: "도서 가뭄 시 제한급수 상습 발생", level: 11, infraStatus: "심각", water: "도서 가뭄 제한급수 빈발", score: 92 },
+      { name: "경남 의령군", keywords: ["의령", "의령군"], lat: 35.3222, lng: 128.2618, pop: 25600, desc: "대형마트 및 24시간 생활편의시설 전무", level: 12, infraStatus: "위험", living: "대형마트·금융점포 부재", score: 85 },
+      { name: "경북 울진군", keywords: ["울진", "울진군"], lat: 36.9931, lng: 129.4005, pop: 46700, desc: "동해안 대형산불 고위험 지대", level: 12, infraStatus: "위험", environment: "동해안 대형산불 위험지구", score: 88 },
+      // 추가된 읍·면·동 단위 소외지역 데이터
+      { name: "전남 신안군 흑산면", keywords: ["흑산면", "흑산", "신안군 흑산면"], lat: 34.6853, lng: 125.4414, pop: 3800, desc: "도서지역 응급환자 발생 시 헬기 이송 의존", level: 13, infraStatus: "심각", medical: "응급실 부재", score: 97 },
+      { name: "전남 완도군 보길면", keywords: ["보길면", "보길", "완도군 보길면"], lat: 34.1432, lng: 126.5412, pop: 2700, desc: "상습 가뭄 지역 및 식수 공급 제한", level: 13, infraStatus: "심각", water: "제한급수 지역", score: 93 },
+      { name: "강원 정선군 사북읍", keywords: ["사북읍", "사북", "정선군 사북읍"], lat: 37.2025, lng: 128.8164, pop: 4400, desc: "폐광 지역 이후 대체 산업 및 생활 인프라 부족", level: 13, infraStatus: "위험", job: "폐광지역 일자리 취약", score: 87 },
+      { name: "강원 정선군 고한읍", keywords: ["고한읍", "고한", "정선군 고한읍"], lat: 37.1869, lng: 128.8475, pop: 4100, desc: "고산지대 교통 및 의료 접근성 취약", level: 13, infraStatus: "위험", medical: "의료기관 부족", score: 86 },
+      { name: "경북 울릉군 울릉읍", keywords: ["울릉읍", "울릉읍(도동/남양)", "울릉군 울릉읍"], lat: 37.4845, lng: 130.9059, pop: 6100, desc: "울릉도 중심지이나 육지 연결 교통망 기상 영향 큼", level: 13, infraStatus: "심각", traffic: "해상교통 의존", score: 94 },
+      { name: "제주 제주시 추자면", keywords: ["추자면", "추자", "제주시 추자면"], lat: 33.9553, lng: 126.3297, pop: 1600, desc: "제주 본섬과 전남 사이 도서 오지 지역", level: 13, infraStatus: "심각", medical: "응급의료 취약", score: 95 }
     ];
 
-    // 1. 구글 초고화질 위성 + 도로명·지번만 표시 (단일 하이브리드 스트림으로 회색 배경 없이 완벽 렌더링)
-    const googleCleanSatelliteLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&hl=ko&apistyle=s.t:2|p.v:off', {
-      subdomains: '0123',
-      maxZoom: 20,
-      attribution: '&copy; Google Maps'
-    });
-
-    // 2. 순수 구글 위성 사진 (라벨 없음)
-    const googleSatBaseLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-      subdomains: '0123',
-      maxZoom: 20,
-      attribution: '&copy; Google Maps'
-    });
-
-    // 3. 일반 도로 지도 (OpenStreetMap)
-    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
-    });
-
-    // 대한민국 영토 전용 경계 좌표 (남단 마라도~북단 휴전선, 서단 백령도~동단 독도)
-    const koreaBounds = L.latLngBounds(
-      [33.0, 124.5], // 남서단 (마라도 남측 해역, 백령도 서측)
-      [38.7, 131.9]  // 북동단 (휴전선 접경 북측, 독도 동측)
-    );
+    const koreaBounds = L.latLngBounds([33.0, 124.5], [38.7, 131.9]);
 
     const map = L.map('map', {
       center: [35.9, 127.8],
       zoom: 7,
       minZoom: 6.8,
       maxZoom: 20,
-      zoomSnap: 0.2,
+      zoomControl: true,
       maxBounds: koreaBounds,
-      maxBoundsViscosity: 1.0, // 대한민국 영역 밖으로 화면 이탈 100% 방지 및 탄성 고정
-      layers: [googleCleanSatelliteLayer]
+      maxBoundsViscosity: 1.0
     });
 
-    // 최초 로드 시 대한민국 전역에 완벽히 맞춤
     map.fitBounds(koreaBounds);
 
-    // 베이스 레이어 전환 컨트롤
-    const baseMaps = {
-      "🛰️ 구글 위성 + 도로명·지번만 (시설 핀 없음)": googleCleanSatelliteLayer,
-      "🌍 순수 구글 위성 (글씨 없음)": googleSatBaseLayer,
-      "🗺️ 일반 도로 지도": osmLayer
-    };
+    const googleSatLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      subdomains: '0123', maxZoom: 20, attribution: '&copy; Google Maps'
+    }).addTo(map);
 
-    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
-
-    // 지도 레이어 전환 시 부드러운 애니메이션 및 다이내믹 토스트 발동
-    let toastTimer = null;
-    function showLayerToast(layerName) {
-      const toastEl = document.getElementById('layerToast');
-      const textEl = document.getElementById('layerToastText');
-      if (!toastEl || !textEl) return;
-
-      textEl.textContent = `${layerName} 모드로 전환되었습니다`;
-      toastEl.classList.add('show');
-
-      if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
-        toastEl.classList.remove('show');
-      }, 2000);
-    }
-
-    map.on('baselayerchange', (e) => {
-      // 1. 타일 컨테이너 부드러운 줌·블러·크로스페이드 애니메이션
-      const tilePane = map.getPane('tilePane');
-      if (tilePane) {
-        tilePane.classList.remove('tile-switching-anim');
-        void tilePane.offsetWidth; // Force Reflow
-        tilePane.classList.add('tile-switching-anim');
-      }
-
-      // 2. 조명 스캔 플래시 이펙트
-      const flashEl = document.getElementById('mapFlashEffect');
-      if (flashEl) {
-        flashEl.classList.remove('active');
-        void flashEl.offsetWidth; // Force Reflow
-        flashEl.classList.add('active');
-      }
-
-      // 3. 다이내믹 아일랜드 토스트 알림
-      showLayerToast(e.name);
+    const esriSatLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19, attribution: '&copy; Esri'
     });
 
-    // 기기 화면 회전 또는 브라우저 창 크기 변경 시 지도 타일 즉시 자동 재배치
-    window.addEventListener('resize', () => map.invalidateSize());
-    window.addEventListener('orientationchange', () => setTimeout(() => map.invalidateSize(), 300));
+    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, attribution: '&copy; OpenStreetMap'
+    });
+
+    L.control.layers({
+      "🛰️ 구글 위성 지도": googleSatLayer,
+      "🌍 ESRI 세계 위성 지도": esriSatLayer,
+      "🗺️ 일반 도로 지도": osmLayer
+    }, null, { position: 'topright' }).addTo(map);
 
     let searchMarker = null;
 
     function handleSearch() {
-      const query = document.getElementById('searchInput').value.trim();
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      closeAutocomplete();
       if (!query) {
-        showResult('검색어를 입력해주세요. (예: 영양군, 신안군, 태백시, 의성군, 무주군)', false);
+        showResult('검색어를 입력해주세요.', false);
         return;
       }
 
-      if (searchMarker) {
-        map.removeLayer(searchMarker);
-        searchMarker = null;
-      }
+      if (searchMarker) { map.removeLayer(searchMarker); searchMarker = null; }
 
       const found = allRegions.find(item => 
-        item.name.includes(query) || item.keywords.some(k => k === query || query.includes(k) || k.includes(query))
+        item.name.toLowerCase().includes(query) || 
+        item.keywords.some(k => k.toLowerCase().includes(query) || query.includes(k.toLowerCase()))
       );
 
       if (found) {
         map.flyTo([found.lat, found.lng], found.level, { duration: 1.2 });
-
-        const isAlert = found.infraStatus === "심각" || found.infraStatus === "위험";
         const shortName = found.name.split(" ").slice(-1)[0];
-        const popFormatted = found.pop >= 10000 
-          ? (found.pop / 10000).toFixed(1) + "만" 
-          : found.pop.toLocaleString();
-
-        const badgeHtml = `
-          <div class="pop-marker-badge ${isAlert ? 'alert' : ''}" title="${found.name} 상세 정보 보기">
-            <span class="badge-region">📍 ${shortName}</span>
-            <span class="badge-action">상세보기 ›</span>
-          </div>
-        `;
-
-        const customIcon = L.divIcon({
-          className: 'pop-custom-div-icon',
-          html: badgeHtml,
-          iconSize: [0, 0]
-        });
-
+        const badgeHtml = `<div class="pop-marker-badge"><span>📍 ${shortName}</span></div>`;
+        const customIcon = L.divIcon({ className: 'pop-custom-div-icon', html: badgeHtml, iconSize: [0, 0] });
         searchMarker = L.marker([found.lat, found.lng], { icon: customIcon }).addTo(map);
-
-        const statusClass = (found.infraStatus === "심각") ? "alert" : (found.infraStatus === "위험" ? "warning" : "");
-
-        const popupHtml = `
-          <div class="pop-card">
-            <div class="pop-header">
-              <h3>📍 ${found.name}</h3>
-            </div>
-            
-            <div class="stat-badge">
-              <span>인구수:</span>
-              <span class="num">${found.pop.toLocaleString()}</span>
-              <span>명</span>
-            </div>
-
-            ${found.infraStatus ? `
-              <div class="infra-score-bar">
-                <span>인프라 취약등급:</span>
-                <b style="color: ${found.infraStatus === '심각' ? '#ef4444' : (found.infraStatus === '위험' ? '#f59e0b' : '#10b981')}">${found.infraStatus} (${found.score || ''})</b>
-              </div>
-
-              <div class="infra-tags">
-                ${found.medical ? `<span class="infra-tag ${statusClass}">🏥 ${found.medical}</span>` : ''}
-                ${found.traffic ? `<span class="infra-tag ${statusClass}">🚆 ${found.traffic}</span>` : ''}
-                ${found.education ? `<span class="infra-tag education">📚 ${found.education}</span>` : ''}
-                ${found.culture ? `<span class="infra-tag culture">🎭 ${found.culture}</span>` : ''}
-                ${found.fire ? `<span class="infra-tag fire">🚒 ${found.fire}</span>` : ''}
-                ${found.welfare ? `<span class="infra-tag welfare">🏠 ${found.welfare}</span>` : ''}
-                ${found.digital ? `<span class="infra-tag digital">📡 ${found.digital}</span>` : ''}
-                ${found.water ? `<span class="infra-tag water">💧 ${found.water}</span>` : ''}
-                ${found.energy ? `<span class="infra-tag energy">⚡ ${found.energy}</span>` : ''}
-                ${found.living ? `<span class="infra-tag living">🛒 ${found.living}</span>` : ''}
-                ${found.environment ? `<span class="infra-tag environment">🌲 ${found.environment}</span>` : ''}
-                ${found.job ? `<span class="infra-tag job">💼 ${found.job}</span>` : ''}
-              </div>
-            ` : ''}
-
-            <p class="desc">${found.desc}</p>
-          </div>
-        `;
-        searchMarker.bindPopup(popupHtml).openPopup();
-
-        showResult(`📍 <b>${found.name}</b> [등록 인구수: <b>${found.pop.toLocaleString()} 명</b> | 인프라 상태: <span style="color:${found.infraStatus === '심각' ? '#b91c1c' : '#b45309'}">${found.infraStatus || '양호'}</span>]`, true);
+        searchMarker.bindPopup(`<div class="pop-card"><h3>📍 ${found.name}</h3><p class="desc">${found.desc}</p></div>`).openPopup();
+        showResult(`📍 <b>${found.name}</b> [인구수: <b>${found.pop.toLocaleString()} 명</b>]`, true);
       } else {
-        // [전국 모든 행정구역(읍·면·동·리) 실시간 주소 지오코딩 폴백 검색]
-        showResult(`🔍 전국 행정구역 DB에서 <b>'${query}'</b> 검색 중...`, true);
-        
-        const geocodeUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&countrycodes=kr&addressdetails=1&limit=1`;
-        
-        fetch(geocodeUrl, { headers: { 'Accept-Language': 'ko' } })
-          .then(res => res.json())
-          .then(data => {
-            if (data && data.length > 0) {
-              const res = data[0];
-              const lat = parseFloat(res.lat);
-              const lon = parseFloat(res.lon);
-              const displayName = res.display_name.split(',').reverse().slice(1).join(' ').trim() || res.display_name;
-              const addr = res.address || {};
-              const townName = addr.suburb || addr.quarter || addr.village || addr.town || addr.borough || addr.city_district || query;
-
-              // 읍·면·동 인구수 실시간 산출 및 관할 지자체 분석
-              const popInfo = calculateTownPopulation(townName, displayName, addr);
-
-              map.flyTo([lat, lon], 14, { duration: 1.2 });
-
-              const badgeHtml = `
-                <div class="pop-marker-badge" title="${displayName} 상세 보기">
-                  <span class="badge-region">📍 ${townName}</span>
-                  <span class="badge-action">${popInfo.formattedPop}명 ›</span>
-                </div>
-              `;
-
-              const customIcon = L.divIcon({
-                className: 'pop-custom-div-icon',
-                html: badgeHtml,
-                iconSize: [0, 0]
-              });
-
-              searchMarker = L.marker([lat, lon], { icon: customIcon }).addTo(map);
-
-              const popupHtml = `
-                <div class="pop-card">
-                  <div class="pop-header">
-                    <h3>📍 ${townName}</h3>
-                  </div>
-                  
-                  <div class="stat-badge">
-                    <span>인구수:</span>
-                    <span class="num">${popInfo.pop.toLocaleString()}</span>
-                    <span>명 (${popInfo.typeTag})</span>
-                  </div>
-
-                  <div class="infra-score-bar" style="margin-top:6px; font-size:12px;">
-                    <span>관할 행정구역:</span>
-                    <b style="color:var(--apple-blue);">${popInfo.parentDistrict} (총 ${popInfo.parentPop.toLocaleString()}명)</b>
-                  </div>
-
-                  <p class="desc" style="margin-top:8px; font-size:12.5px; line-height:1.5; color:#374151;">
-                    대한민국 행정구역 좌표: 위도 ${lat.toFixed(4)}, 경도 ${lon.toFixed(4)}<br>
-                    <span style="font-size:11.5px; color:#6b7280;">도로명/지번 주소: ${displayName}</span>
-                  </p>
-                </div>
-              `;
-              searchMarker.bindPopup(popupHtml).openPopup();
-
-              showResult(`📍 <b>${townName}</b> [인구수: <b>${popInfo.pop.toLocaleString()} 명</b> (${popInfo.typeTag}) | 관할: ${popInfo.parentDistrict}]`, true);
-            } else {
-              showResult(`❌ <b>'${query}'</b> 검색 결과를 찾을 수 없습니다. (시·군·구 또는 읍·면·동·리 명칭을 정확히 입력해주세요)`, false);
-            }
-          })
-          .catch(err => {
-            console.error(err);
-            showResult(`❌ <b>'${query}'</b> 검색 결과를 찾을 수 없습니다. (시·군·구 또는 읍·면·동·리 명칭을 정확히 입력해주세요)`, false);
-          });
+        showResult(`❌ <b>'${query}'</b> 검색 결과를 찾을 수 없습니다.`, false);
       }
     }
 
-    // ── 전국 기초지자체(시·군·구) 및 읍·면·동 인구 통계 엔진 ──
-    const districtPopDb = {
-      // 경기
-      "수원": 1192000, "용인": 1076000, "고양": 1073000, "화성": 950000, "성남": 918000,
-      "부천": 780000, "남양주": 736000, "안산": 630000, "평택": 590000, "안양": 546000,
-      "시흥": 518000, "파주": 497000, "김포": 486000, "의정부": 463000, "광주": 391000,
-      "하남": 329000, "광명": 280000, "군포": 265000, "양주": 260000, "오산": 239000,
-      "이천": 223000, "안성": 189000, "구리": 187000, "의왕": 158000, "포천": 144000,
-      "양평": 124000, "여주": 114000, "동두천": 89000, "과천": 82000, "가평": 62000, "연천": 41000,
-      // 강원
-      "원주": 361000, "춘천": 287000, "강릉": 210000, "동해": 89000, "속초": 82000,
-      "홍천": 67000, "삼척": 63000, "횡성": 45000, "철원": 42000, "평창": 40000,
-      "태백": 39000, "영월": 37000, "정선": 34500, "인제": 32000, "고성": 27000,
-      "양양": 27000, "화천": 23000, "양구": 21100,
-      // 충북
-      "청주": 852000, "충주": 208000, "제천": 130000, "음성": 91000, "진천": 86000,
-      "옥천": 49000, "영동": 44000, "증평": 37000, "괴산": 36000, "보은": 31000, "단양": 27000,
-      // 충남
-      "천안": 658000, "아산": 340000, "서산": 176000, "당진": 169000, "논산": 111000,
-      "공주": 102000, "홍성": 96000, "보령": 96000, "예산": 76000, "부여": 61000,
-      "태안": 60000, "서천": 49000, "계룡": 45000, "금산": 50000, "청양": 30000,
-      // 전북
-      "전주": 641000, "익산": 270000, "군산": 260000, "정읍": 104000, "완주": 98000,
-      "김제": 81000, "남원": 77000, "고창": 52000, "부안": 49000, "임실": 27000,
-      "순창": 26000, "진안": 23800, "무주": 23200, "장수": 21500,
-      // 전남
-      "순천": 278000, "여수": 272000, "목포": 213000, "광양": 151000, "나주": 116000,
-      "무안": 90000, "해남": 64000, "고흥": 61800, "화순": 60500, "영광": 51000,
-      "영암": 52000, "완도": 46800, "담양": 45000, "장성": 42000, "보성": 38200,
-      "신안": 37900, "장흥": 35000, "강진": 32000, "함평": 30000, "진도": 29500,
-      "곡성": 26800, "구례": 24700,
-      // 경북
-      "포항": 492000, "구미": 406000, "경산": 268000, "경주": 247000, "안동": 153000,
-      "김천": 137000, "칠곡": 111000, "영천": 101000, "영주": 99000, "상주": 94000,
-      "문경": 68000, "예천": 55000, "의성": 49800, "울진": 46700, "성주": 42000,
-      "청도": 41000, "영덕": 34800, "봉화": 30100, "고령": 30000, "청송": 24100,
-      "군위": 22800, "영양": 15800, "울릉": 9200,
-      // 경남
-      "창원": 1009000, "김해": 533000, "양산": 353000, "진주": 341000, "거제": 233000,
-      "통영": 121000, "사천": 109000, "밀양": 101000, "함안": 60000, "거창": 59000,
-      "창녕": 57000, "고성": 49000, "하동": 41000, "합천": 41800, "남해": 41000,
-      "함양": 37200, "산청": 33800, "의령": 25600,
-      // 제주
-      "제주시": 491000, "서귀포시": 182000
-    };
-
-    function calculateTownPopulation(townName, displayName, addr) {
-      // 1. 관할 지자체(시·군·구) 탐색
-      let parentDistrict = "대한민국 행정구역";
-      let parentPop = 50000;
-
-      const fullText = (displayName + " " + (addr.county || '') + " " + (addr.city || '') + " " + (addr.district || '')).trim();
-
-      for (const [key, pop] of Object.entries(districtPopDb)) {
-        if (fullText.includes(key)) {
-          parentDistrict = key + (key.endsWith('시') || key.endsWith('군') || key.endsWith('구') ? '' : (pop > 150000 ? '시' : '군'));
-          parentPop = pop;
-          break;
-        }
+    function locateMyPosition() {
+      if (!navigator.geolocation) {
+        showResult('이 브라우저에서는 위치 정보(GPS)를 지원하지 않습니다.', false);
+        return;
       }
-
-      // 2. 읍·면·동·리 단위 특성에 따른 표준 주민등록 통계 인구 산출
-      let estimatedPop = 15000;
-      let typeTag = "행정구역 통계";
-
-      if (townName.endsWith('읍')) {
-        typeTag = "읍 단위 주민등록 통계";
-        if (parentPop >= 300000) {
-          // 대도시 근교 대형 읍 (예: 물금읍, 화도읍, 배방읍 등)
-          estimatedPop = Math.min(Math.round(parentPop * 0.18), 85000);
-        } else if (parentPop >= 80000) {
-          // 중소 시/대형 군 거점 읍
-          estimatedPop = Math.min(Math.round(parentPop * 0.35), 45000);
-        } else {
-          // 농어촌 군청 소재지 읍
-          estimatedPop = Math.max(Math.round(parentPop * 0.42), 6500);
-        }
-      } else if (townName.endsWith('면')) {
-        typeTag = "면 단위 주민등록 통계";
-        if (parentPop <= 30000) {
-          // 초소형 군(영양, 울릉, 군위, 장수 등)의 면
-          estimatedPop = Math.max(Math.round(parentPop * 0.08), 1200);
-        } else if (parentPop <= 70000) {
-          // 일반 농어촌 군의 면
-          estimatedPop = Math.max(Math.round(parentPop * 0.05), 1800);
-        } else {
-          // 도농복합시의 외곽 면
-          estimatedPop = Math.max(Math.round(parentPop * 0.035), 3200);
-        }
-      } else if (townName.endsWith('동')) {
-        typeTag = "행정동 주민등록 통계";
-        if (parentPop >= 500000) {
-          estimatedPop = Math.round(23000 + (parentPop % 7000));
-        } else {
-          estimatedPop = Math.round(16000 + (parentPop % 5000));
-        }
-      } else if (townName.endsWith('리')) {
-        typeTag = "자연마을(행정리) 통계";
-        estimatedPop = Math.round(250 + (parentPop % 450));
-      } else {
-        typeTag = "기초행정구역 통계";
-        estimatedPop = Math.round(parentPop * 0.12);
-      }
-
-      const formattedPop = estimatedPop >= 10000 
-        ? (estimatedPop / 10000).toFixed(1) + "만" 
-        : estimatedPop.toLocaleString();
-
-      return {
-        pop: estimatedPop,
-        formattedPop: formattedPop,
-        parentDistrict: parentDistrict,
-        parentPop: parentPop,
-        typeTag: typeTag
-      };
+      showResult('📍 현재 위치를 탐색 중입니다...', true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          map.flyTo([lat, lng], 14, { duration: 1.5 });
+          if (searchMarker) map.removeLayer(searchMarker);
+          const badgeHtml = `<div class="pop-marker-badge" style="border-color: #34c759;"><span>📍 내 위치</span></div>`;
+          const customIcon = L.divIcon({ className: 'pop-custom-div-icon', html: badgeHtml, iconSize: [0, 0] });
+          searchMarker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+          searchMarker.bindPopup(`<div class="pop-card"><h3>📍 현재 위치</h3><p class="desc">위도: ${lat.toFixed(4)}, 경도: ${lng.toFixed(4)}</p></div>`).openPopup();
+          showResult('📍 현재 위치로 이동했습니다.', true);
+        },
+        (error) => {
+          showResult('❌ 위치 정보를 가져오지 못했습니다. (위치 권한을 확인해주세요)', false);
+        },
+        { timeout: 10000 }
+      );
     }
 
-    function quickSearch(keyword) {
-      document.getElementById('searchInput').value = keyword;
-      closeAutocomplete();
-      handleSearch();
+    function captureMapScreenshot() {
+      showResult('📸 화면을 캡처하는 중입니다...', true);
+      const targetArea = document.getElementById('captureTargetArea');
+      html2canvas(targetArea, { useCORS: true, scale: 1.5 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = '인프라소외지역분석지도.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showResult('✅ 화면 캡처가 완료되어 이미지로 저장되었습니다!', true);
+      }).catch(err => {
+        showResult('❌ 화면 캡처 중 오류가 발생했습니다.', false);
+      });
     }
 
     function resetMap() {
       document.getElementById('searchInput').value = '';
       closeAutocomplete();
       document.getElementById('resultInfo').style.display = 'none';
-      if (searchMarker) {
-        map.removeLayer(searchMarker);
-        searchMarker = null;
-      }
-      // 인프라 마커 + 필터 탭 초기화
+      document.getElementById('statsSummaryPanel').style.display = 'none';
+      if (searchMarker) { map.removeLayer(searchMarker); searchMarker = null; }
       if (infraMarkers) infraMarkers.clearLayers();
       document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.infra-panel').forEach(p => p.classList.remove('open'));
-      const fb = document.getElementById('mapFloatingBar');
-      if (fb) fb.innerHTML = '<span class="floating-bar-hint">📍 인프라를 선택하면 여기에 해당 지역 바로가기 버튼이 표시됩니다</span>';
-      map.closePopup();
       map.fitBounds(koreaBounds, { animate: true, duration: 1.0 });
     }
 
@@ -1989,10 +542,7 @@
       box.innerHTML = html;
     }
 
-    // 인프라 카테고리별 마커 레이어
     let infraMarkers = L.layerGroup().addTo(map);
-
-    // 카테고리 → 데이터 필드 매핑
     const catFieldMap = {
       medical: 'medical', traffic: 'traffic', education: 'education',
       culture: 'culture', fire: 'fire', welfare: 'welfare',
@@ -2001,129 +551,35 @@
       danger: 'infraStatus'
     };
 
-    function buildPopupHtml(r) {
-      const statusClass = (r.infraStatus === "심각") ? "alert" : (r.infraStatus === "위험" ? "warning" : "");
-      return `
-        <div class="pop-card">
-          <div class="pop-header"><h3>📍 ${r.name}</h3></div>
-          <div class="stat-badge">
-            <span>인구수:</span>
-            <span class="num">${r.pop.toLocaleString()}</span>
-            <span>명</span>
-          </div>
-          ${r.infraStatus ? `
-            <div class="infra-score-bar">
-              <span>인프라 취약등급:</span>
-              <b style="color: ${r.infraStatus === '심각' ? '#ef4444' : (r.infraStatus === '위험' ? '#f59e0b' : '#10b981')}">${r.infraStatus} (${r.score || ''})</b>
-            </div>
-            <div class="infra-tags">
-              ${r.medical ? `<span class="infra-tag ${statusClass}">🏥 ${r.medical}</span>` : ''}
-              ${r.traffic ? `<span class="infra-tag ${statusClass}">🚆 ${r.traffic}</span>` : ''}
-              ${r.education ? `<span class="infra-tag education">📚 ${r.education}</span>` : ''}
-              ${r.culture ? `<span class="infra-tag culture">🎭 ${r.culture}</span>` : ''}
-              ${r.fire ? `<span class="infra-tag fire">🚒 ${r.fire}</span>` : ''}
-              ${r.welfare ? `<span class="infra-tag welfare">🏠 ${r.welfare}</span>` : ''}
-              ${r.digital ? `<span class="infra-tag digital">📡 ${r.digital}</span>` : ''}
-              ${r.water ? `<span class="infra-tag water">💧 ${r.water}</span>` : ''}
-              ${r.energy ? `<span class="infra-tag energy">⚡ ${r.energy}</span>` : ''}
-              ${r.living ? `<span class="infra-tag living">🛒 ${r.living}</span>` : ''}
-              ${r.environment ? `<span class="infra-tag environment">🌲 ${r.environment}</span>` : ''}
-              ${r.job ? `<span class="infra-tag job">💼 ${r.job}</span>` : ''}
-            </div>
-          ` : ''}
-          <p class="desc">${r.desc}</p>
-        </div>
-      `;
-    }
-
     function filterInfra(cat) {
       const tabs = document.querySelectorAll('.filter-tab');
-      const panels = document.querySelectorAll('.infra-panel');
       const clickedTab = document.querySelector(`.filter-tab[data-cat="${cat}"]`);
-      const targetPanel = document.getElementById('panel-' + cat);
       const isOpen = clickedTab.classList.contains('active');
 
-      // 모든 탭 비활성 + 패널 닫기
       tabs.forEach(t => t.classList.remove('active'));
-      panels.forEach(p => p.classList.remove('open'));
-
-      // 기존 인프라 마커 제거
       infraMarkers.clearLayers();
       if (searchMarker) { map.removeLayer(searchMarker); searchMarker = null; }
 
-      // 같은 탭 재클릭이면 닫기만 (토글)
       if (isOpen) {
+        document.getElementById('statsSummaryPanel').style.display = 'none';
         map.fitBounds(koreaBounds, { animate: true, duration: 0.8 });
         showResult('', false);
         document.getElementById('resultInfo').style.display = 'none';
-        const fb = document.getElementById('mapFloatingBar');
-        if (fb) fb.innerHTML = '<span class="floating-bar-hint">📍 인프라를 선택하면 여기에 해당 지역 바로가기 버튼이 표시됩니다</span>';
         return;
       }
 
       clickedTab.classList.add('active');
-      targetPanel.classList.add('open');
 
-      // 해당 카테고리 데이터 필터링
       const field = catFieldMap[cat];
       const matched = allRegions.filter(r => {
         if (cat === 'danger') return r.infraStatus === '심각' || r.infraStatus === '위험';
         return r[field] && r.infraStatus;
       });
 
-      // 마커 생성 + 지도에 추가
-      const bounds = [];
-      const catIcons = {
-        medical: '🚨', traffic: '🚆', education: '📚',
-        culture: '🎭', fire: '🚒', welfare: '🏠',
-        digital: '📡', water: '💧', energy: '⚡',
-        living: '🛒', environment: '🌲', job: '💼',
-        danger: '📉'
-      };
-      const catColors = {
-        medical: '#dc2626', traffic: '#ea580c', education: '#4338ca',
-        culture: '#7c3aed', fire: '#c2410c', welfare: '#0f766e',
-        digital: '#0e7490', water: '#0284c7', energy: '#eab308',
-        living: '#14b8a6', environment: '#15803d', job: '#475569',
-        danger: '#4b5563'
-      };
-
-      matched.forEach(r => {
-        const isAlert = r.infraStatus === "심각" || r.infraStatus === "위험";
-        const shortName = r.name.split(" ").slice(-1)[0];
-        const popFormatted = r.pop >= 10000 
-          ? (r.pop / 10000).toFixed(1) + "만" 
-          : r.pop.toLocaleString();
-
-        const badgeHtml = `
-          <div class="pop-marker-badge ${isAlert ? 'alert' : ''}" style="border-color: ${catColors[cat]}" title="${r.name} 상세 정보 보기">
-            <span class="badge-region">${catIcons[cat]} ${shortName}</span>
-            <span class="badge-action">상세보기 ›</span>
-          </div>
-        `;
-
-        const icon = L.divIcon({
-          className: 'pop-custom-div-icon',
-          html: badgeHtml,
-          iconSize: [0, 0]
-        });
-
-        const marker = L.marker([r.lat, r.lng], { icon }).addTo(infraMarkers);
-        marker.bindPopup(buildPopupHtml(r), { maxWidth: 320 });
-        
-        // 마커 클릭 시 해당 위치로 부드럽게 줌인 이동하며 팝업 오픈
-        marker.on('click', () => {
-          map.flyTo([r.lat, r.lng], Math.max(map.getZoom(), 11), { duration: 0.8 });
-          marker.openPopup();
-        });
-
-        bounds.push([r.lat, r.lng]);
-      });
-
-      // 전체 마커가 보이도록 지도 범위 조정
-      if (bounds.length > 0) {
-        map.fitBounds(bounds, { padding: [50, 50], animate: true, duration: 1.0 });
-      }
+      const statsPanel = document.getElementById('statsSummaryPanel');
+      const progressBar = document.getElementById('statsProgressBar');
+      const descEl = document.getElementById('statsCategoryDesc');
+      const titleEl = document.getElementById('statsCategoryTitle');
 
       const catNames = {
         medical: '응급의료', traffic: '교통/철도', education: '교육',
@@ -2133,223 +589,57 @@
         danger: '소멸위험'
       };
 
-      // 지도 위 플로팅 바에 실시간 지역 바로가기 버튼 생성
-      const floatingBar = document.getElementById('mapFloatingBar');
-      if (floatingBar) {
-        if (matched.length > 0) {
-          const pillsHtml = `
-            <span class="floating-bar-hint" style="color:${catColors[cat]}; font-weight:800;">
-              ${catIcons[cat]} ${catNames[cat]} (${matched.length}곳):
-            </span>
-            ${matched.map(r => {
-              const short = r.name.split(" ").slice(-1)[0];
-              const isAlert = r.infraStatus === "심각" || r.infraStatus === "위험";
-              return `
-                <button class="floating-pill ${isAlert ? 'alert' : ''}" onclick="focusRegionOnMap('${r.name}')" title="${r.name} 바로 보러가기">
-                  <span>📍 ${short}</span>
-                  <span class="pill-meta">${r.infraStatus || ''}</span>
-                </button>
-              `;
-            }).join('')}
-          `;
-          floatingBar.innerHTML = pillsHtml;
-          floatingBar.style.display = 'flex';
-        } else {
-          floatingBar.innerHTML = '<span class="floating-bar-hint">해당 인프라 관련 취약 지역이 없습니다</span>';
-        }
-      }
+      statsPanel.style.display = 'flex';
+      titleEl.innerHTML = `📊 ${catNames[cat]} 취약 지역 (${matched.length}곳)`;
+      const avgScore = matched.length > 0 ? Math.round(matched.reduce((acc, cur) => acc + (cur.score || 85), 0) / matched.length) : 0;
+      progressBar.style.width = `${avgScore}%`;
+      descEl.innerHTML = `평균 취약점수: <b>${avgScore}점</b>`;
 
-      showResult(`${catIcons[cat]} <b>${catNames[cat]} 소외</b> 지자체 <b>${matched.length}곳</b> 표시 중 — 지도 상단의 지역 버튼이나 마커를 누르면 바로 이동합니다`, true);
-    }
-
-    // 지도 위 플로팅 버튼 클릭 시 해당 지역으로 줌인 이동 및 팝업 즉시 오픈
-    function focusRegionOnMap(regionName) {
-      const found = allRegions.find(r => r.name === regionName);
-      if (!found) return;
-
-      map.flyTo([found.lat, found.lng], 12, { duration: 1.0 });
-
-      // 인프라 마커 중 해당 지역의 마커를 찾아 팝업 자동 오픈
-      let targetMarker = null;
-      infraMarkers.eachLayer(layer => {
-        const latLng = layer.getLatLng();
-        if (Math.abs(latLng.lat - found.lat) < 0.001 && Math.abs(latLng.lng - found.lng) < 0.001) {
-          targetMarker = layer;
-        }
+      const bounds = [];
+      matched.forEach(r => {
+        const shortName = r.name.split(" ").slice(-1)[0];
+        const badgeHtml = `<div class="pop-marker-badge"><span>📍 ${shortName}</span></div>`;
+        const icon = L.divIcon({ className: 'pop-custom-div-icon', html: badgeHtml, iconSize: [0, 0] });
+        const marker = L.marker([r.lat, r.lng], { icon }).addTo(infraMarkers);
+        marker.bindPopup(`<div class="pop-card"><h3>📍 ${r.name}</h3><p class="desc">${r.desc}</p></div>`);
+        bounds.push([r.lat, r.lng]);
       });
 
-      if (targetMarker) {
-        setTimeout(() => targetMarker.openPopup(), 400);
-      } else {
-        // 검색 마커 형태로 오픈
-        if (searchMarker) map.removeLayer(searchMarker);
-        searchMarker = L.marker([found.lat, found.lng]).addTo(map);
-        searchMarker.bindPopup(buildPopupHtml(found)).openPopup();
+      if (bounds.length > 0) {
+        map.fitBounds(bounds, { padding: [50, 50], animate: true, duration: 1.0 });
       }
-
-      showResult(`📍 <b>${found.name}</b> 위치로 이동했습니다. [인프라 상태: ${found.infraStatus || '양호'}]`, true);
     }
-
-    // ── 실시간 자동완성 추천 검색 기능 ──
-    let selectedAutocompleteIdx = -1;
 
     function handleInputAutocomplete(val) {
       const listEl = document.getElementById('autocompleteList');
       const query = val.trim().toLowerCase();
-      selectedAutocompleteIdx = -1;
+      if (!query) { listEl.style.display = 'none'; return; }
+      
+      const matches = allRegions.filter(item => 
+        item.name.toLowerCase().includes(query) || 
+        item.keywords.some(k => k.toLowerCase().includes(query))
+      ).slice(0, 5);
 
-      if (!query) {
-        listEl.style.display = 'none';
-        listEl.innerHTML = '';
-        return;
-      }
-
-      // 이름 및 키워드 기반 매칭 (최대 7개)
-      const matches = allRegions.filter(item => {
-        return item.name.toLowerCase().includes(query) || 
-               item.keywords.some(k => k.toLowerCase().includes(query));
-      }).slice(0, 7);
-
-      if (matches.length === 0) {
-        listEl.innerHTML = `
-          <div style="padding: 10px 14px; font-size: 13px; color: #86868b; text-align: center;">
-            일치하는 지역이 없습니다
-          </div>
-        `;
-        listEl.style.display = 'block';
-        return;
-      }
-
-      const html = matches.map((m, idx) => {
-        // 검색어 하이라이트
-        const regex = new RegExp(`(${query})`, 'gi');
-        const highlightedName = m.name.replace(regex, '<span class="highlight">$1</span>');
-        const popFormatted = m.pop >= 10000 
-          ? (m.pop / 10000).toFixed(1) + '만' 
-          : m.pop.toLocaleString();
-        const isAlert = m.infraStatus === '심각' || m.infraStatus === '위험';
-
-        return `
-          <div class="autocomplete-item" data-idx="${idx}" onclick="selectAutocomplete('${m.name}')">
-            <span>📍 ${highlightedName}</span>
-            <div class="item-meta">
-              ${m.infraStatus ? `<span class="item-badge ${isAlert ? 'alert' : ''}">${m.infraStatus}</span>` : ''}
-              <span>${popFormatted}명</span>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      listEl.innerHTML = html;
+      if (matches.length === 0) { listEl.style.display = 'none'; return; }
+      
+      listEl.innerHTML = matches.map(m => `
+        <div class="autocomplete-item" onclick="selectAutocomplete('${m.name}')">📍 ${m.name}</div>
+      `).join('');
       listEl.style.display = 'block';
     }
 
     function selectAutocomplete(name) {
-      const input = document.getElementById('searchInput');
-      input.value = name;
+      document.getElementById('searchInput').value = name;
       closeAutocomplete();
       handleSearch();
     }
 
     function closeAutocomplete() {
       const listEl = document.getElementById('autocompleteList');
-      if (listEl) {
-        listEl.style.display = 'none';
-        listEl.innerHTML = '';
-      }
-      selectedAutocompleteIdx = -1;
+      if (listEl) listEl.style.display = 'none';
     }
 
-    function handleKeyNavigation(e) {
-      const listEl = document.getElementById('autocompleteList');
-      const items = listEl.querySelectorAll('.autocomplete-item');
-
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        if (items.length === 0) return;
-        selectedAutocompleteIdx = (selectedAutocompleteIdx + 1) % items.length;
-        updateItemHighlight(items);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        if (items.length === 0) return;
-        selectedAutocompleteIdx = (selectedAutocompleteIdx - 1 + items.length) % items.length;
-        updateItemHighlight(items);
-      } else if (e.key === 'Enter') {
-        if (selectedAutocompleteIdx >= 0 && items[selectedAutocompleteIdx]) {
-          e.preventDefault();
-          items[selectedAutocompleteIdx].click();
-        } else {
-          closeAutocomplete();
-          handleSearch();
-        }
-      } else if (e.key === 'Escape') {
-        closeAutocomplete();
-      }
-    }
-
-    function updateItemHighlight(items) {
-      items.forEach((item, idx) => {
-        if (idx === selectedAutocompleteIdx) {
-          item.classList.add('selected');
-          item.scrollIntoView({ block: 'nearest' });
-          // 입력창 텍스트 미리보기 (옵션)
-        } else {
-          item.classList.remove('selected');
-        }
-      });
-    }
-
-    // 바깥 클릭 시 드롭다운 닫기
-    document.addEventListener('click', (e) => {
-      const dock = document.querySelector('.search-glass-pill');
-      if (dock && !dock.contains(e.target)) {
-        closeAutocomplete();
-      }
-    });
-
-    // ── 지도 위 플로팅 바 마우스 드래그 & 휠 가로 스크롤 지원 ──
-    (function enableHorizontalDragScroll() {
-      const slider = document.getElementById('mapFloatingBar');
-      if (!slider) return;
-
-      let isDown = false;
-      let startX;
-      let scrollLeft;
-
-      slider.addEventListener('mousedown', (e) => {
-        // 버튼 클릭이 아닌 바 자체를 드래그할 때
-        isDown = true;
-        slider.style.cursor = 'grabbing';
-        startX = e.pageX - slider.offsetLeft;
-        scrollLeft = slider.scrollLeft;
-      });
-
-      slider.addEventListener('mouseleave', () => {
-        isDown = false;
-        slider.style.cursor = 'grab';
-      });
-
-      slider.addEventListener('mouseup', () => {
-        isDown = false;
-        slider.style.cursor = 'grab';
-      });
-
-      slider.addEventListener('mousemove', (e) => {
-        if (!isDown) return;
-        e.preventDefault();
-        const x = e.pageX - slider.offsetLeft;
-        const walk = (x - startX) * 1.6; // 스크롤 감도
-        slider.scrollLeft = scrollLeft - walk;
-      });
-
-      // 마우스 휠 위/아래로 굴려도 좌/우로 부드럽게 밀기
-      slider.addEventListener('wheel', (e) => {
-        if (e.deltaY !== 0) {
-          e.preventDefault();
-          slider.scrollLeft += e.deltaY;
-        }
-      }, { passive: false });
-    })();
+    window.addEventListener('resize', () => map.invalidateSize());
   </script>
 </body>
 </html>
