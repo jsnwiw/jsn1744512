@@ -706,8 +706,8 @@
       [38.7, 132.1]
     );
 
-    // 1. 한국어 지원 초고화질 하이브리드 위성 지도 (Google Maps Satellite + Korean Labels)
-    const googleKoreanSatLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&hl=ko', {
+    // 1. 한국어 지원 초고화질 하이브리드 위성 지도 (시설/상권 POI 핀 제거, 행정구역 지명 및 도로망만 깔끔하게 표시)
+    const googleKoreanSatLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&hl=ko&apistyle=s.t:2|p.v:off', {
       subdomains: '0123',
       maxZoom: 20,
       attribution: '&copy; Google Maps'
@@ -735,7 +735,7 @@
 
     // 베이스 레이어 전환 컨트롤
     const baseMaps = {
-      "🛰️ 초고화질 위성 (한국어 도로/지명)": googleKoreanSatLayer,
+      "🛰️ 깔끔한 한국어 위성 (시설 핀 없음)": googleKoreanSatLayer,
       "🌍 Esri 항공 위성 (순수 위성사진)": esriSatelliteLayer,
       "🗺️ 일반 도로 지도": osmLayer
     };
