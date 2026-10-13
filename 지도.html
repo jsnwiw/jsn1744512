@@ -479,7 +479,7 @@
       height: calc(100vh - 240px);
       height: calc(100dvh - 240px);
       border-radius: 26px;
-      overflow: hidden;
+      overflow: visible; /* 레이어 옵션창이 잘리지 않도록 visible */
       border: 1.5px solid var(--glass-border);
       box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
     }
@@ -489,6 +489,27 @@
       height: 100%;
       border-radius: 26px;
       z-index: 1;
+      /* 지도 타일만 안쪽에서 잘리도록 처리 */
+      clip-path: inset(0 round 26px);
+    }
+
+    /* Leaflet 컨트롤이 항상 지도 위에 표시되도록 z-index 강제 상향 */
+    .leaflet-control-container {
+      z-index: 900 !important;
+    }
+
+    .leaflet-control-layers {
+      z-index: 1100 !important;
+      position: relative !important;
+    }
+
+    .leaflet-control-layers-expanded {
+      z-index: 1200 !important;
+      overflow: visible !important;
+    }
+
+    .leaflet-top, .leaflet-bottom {
+      z-index: 1000 !important;
     }
 
     /* 지도 레이어 전환 시 부드러운 크로스페이드 & 줌 블러 애니메이션 */
@@ -1092,16 +1113,19 @@
         height: 65dvh;
         flex: 1 1 520px;
         border-radius: 20px;
+        overflow: visible;
       }
 
       #map {
         height: 100%;
         border-radius: 20px;
+        clip-path: inset(0 round 20px);
       }
 
       .leaflet-control-layers {
         font-size: 11px !important;
         padding: 6px 8px !important;
+        z-index: 1200 !important;
       }
     }
 
