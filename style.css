@@ -1,0 +1,922 @@
+:root {
+      --glass-bg: rgba(255, 255, 255, 0.58);
+      --glass-border: rgba(255, 255, 255, 0.65);
+      --glass-border-subtle: rgba(255, 255, 255, 0.45);
+      --glass-blur: blur(28px) saturate(190%);
+      --apple-blue: #007aff;
+      --text-main: #1d1d1f;
+      --text-sub: #6e6e73;
+      --shadow-apple: 0 20px 40px -10px rgba(0, 0, 0, 0.12), 0 0 1px 1px rgba(255, 255, 255, 0.8) inset;
+      --shadow-float: 0 12px 28px rgba(0, 0, 0, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    @keyframes auroraGlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "SF Pro Display", sans-serif;
+      background: radial-gradient(circle at 15% 15%, #ffd1ff 0%, transparent 40%),
+                  radial-gradient(circle at 85% 20%, #c4e0e5 0%, transparent 45%),
+                  radial-gradient(circle at 50% 85%, #d4fc79 0%, transparent 40%),
+                  #eef2f7;
+      background-size: 200% 200%;
+      animation: auroraGlow 14s ease infinite;
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 24px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    @keyframes shellEntrance {
+      0% { opacity: 0; transform: translateY(22px) scale(0.985); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .glass-phone-shell {
+      width: 100%;
+      max-width: 1360px;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1.5px solid var(--glass-border);
+      border-radius: 36px;
+      box-shadow: var(--shadow-apple);
+      padding: 28px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      animation: shellEntrance 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes iconFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    .sf-icon {
+      animation: iconFloat 3.5s ease-in-out infinite;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .sf-icon:hover {
+      transform: rotate(12deg) scale(1.12);
+    }
+
+    .glass-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--glass-border-subtle);
+    }
+
+    .brand-ios {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .sf-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.4));
+      border: 1.5px solid var(--glass-border);
+      backdrop-filter: var(--glass-blur);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 8px 16px rgba(0, 122, 255, 0.15);
+    }
+
+    .brand-text h1 {
+      font-size: 23px;
+      font-weight: 700;
+      letter-spacing: -0.6px;
+      color: var(--text-main);
+    }
+
+    .brand-text p {
+      font-size: 13px;
+      color: var(--text-sub);
+      font-weight: 500;
+      margin-top: 1px;
+    }
+
+    .search-dock {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 580px;
+    }
+
+    .search-glass-pill {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-glass-pill svg {
+      position: absolute;
+      left: 18px;
+      width: 18px;
+      height: 18px;
+      color: #86868b;
+      pointer-events: none;
+    }
+
+    .glass-input {
+      width: 100%;
+      padding: 13px 20px 13px 46px;
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-main);
+      outline: none;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.02) inset;
+      backdrop-filter: blur(12px);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .glass-input:focus {
+      background: rgba(255, 255, 255, 0.95);
+      border-color: var(--apple-blue);
+      box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2);
+    }
+
+    /* 실시간 자동완성 검색 추천 드롭다운 */
+    .autocomplete-list {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1.5px solid rgba(255, 255, 255, 0.9);
+      border-radius: 18px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.14);
+      max-height: 280px;
+      overflow-y: auto;
+      z-index: 2000;
+      padding: 6px;
+      display: none;
+      animation: dropDownSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes dropDownSlide {
+      from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .autocomplete-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-main);
+      transition: all 0.15s ease;
+    }
+
+    .autocomplete-item:hover, .autocomplete-item.selected {
+      background: rgba(0, 122, 255, 0.1);
+      color: var(--apple-blue);
+      transform: translateX(4px);
+    }
+
+    .autocomplete-item .item-meta {
+      font-size: 11.5px;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .autocomplete-item .item-badge {
+      font-size: 10.5px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.06);
+    }
+
+    .autocomplete-item .item-badge.alert {
+      background: rgba(239, 68, 68, 0.12);
+      color: #dc2626;
+    }
+
+    .autocomplete-item .highlight {
+      color: var(--apple-blue);
+      font-weight: 800;
+      text-decoration: underline;
+    }
+
+    .ios-btn {
+      padding: 12px 22px;
+      border: none;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+    }
+
+    .btn-apple-blue {
+      background: var(--apple-blue);
+      color: #ffffff;
+      box-shadow: 0 6px 16px rgba(0, 122, 255, 0.3);
+    }
+
+    .btn-apple-blue:hover {
+      background: var(--apple-blue-hover);
+      transform: scale(1.02);
+    }
+
+    .btn-apple-glass {
+      background: rgba(255, 255, 255, 0.7);
+      color: var(--text-main);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-apple-glass:hover {
+      background: rgba(255, 255, 255, 0.9);
+      transform: scale(1.02);
+    }
+
+    .glass-chips-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 10px 18px;
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border-subtle);
+      border-radius: 20px;
+    }
+
+    /* 카테고리 필터 탭 바 */
+    .infra-filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border-subtle);
+      border-radius: 20px;
+    }
+
+    .filter-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 7px 14px;
+      border-radius: 30px;
+      border: 1.5px solid rgba(0,0,0,0.08);
+      background: rgba(255,255,255,0.7);
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      white-space: nowrap;
+    }
+
+    .filter-tab:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .filter-tab.active {
+      color: #fff;
+      border-color: transparent;
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .filter-tab[data-cat="medical"].active   { background: #dc2626; }
+    .filter-tab[data-cat="traffic"].active    { background: #ea580c; }
+    .filter-tab[data-cat="education"].active  { background: #4338ca; }
+    .filter-tab[data-cat="culture"].active    { background: #7c3aed; }
+    .filter-tab[data-cat="fire"].active       { background: #c2410c; }
+    .filter-tab[data-cat="welfare"].active    { background: #0f766e; }
+    .filter-tab[data-cat="digital"].active    { background: #0e7490; }
+    .filter-tab[data-cat="water"].active      { background: #0284c7; }
+    .filter-tab[data-cat="energy"].active     { background: #eab308; }
+    .filter-tab[data-cat="living"].active     { background: #14b8a6; }
+    .filter-tab[data-cat="environment"].active { background: #15803d; }
+    .filter-tab[data-cat="job"].active        { background: #475569; }
+    .filter-tab[data-cat="danger"].active     { background: #4b5563; }
+
+    /* 인프라 패널 (칩 목록) */
+    .infra-panel {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      padding: 0 18px;
+      transition: max-height 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  opacity 0.3s ease,
+                  padding 0.35s ease;
+    }
+
+    .infra-panel.open {
+      max-height: 200px;
+      opacity: 1;
+      padding: 10px 18px;
+    }
+
+    .infra-chip-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: rgba(255,255,255,0.45);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border-subtle);
+      border-radius: 18px;
+      padding: 10px 16px;
+      animation: chipSlideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes chipSlideIn {
+      0% { opacity: 0; transform: translateY(-8px) scale(0.97); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .chip-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-sub);
+      margin-right: 2px;
+    }
+
+    .ios-chip {
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .ios-chip:hover {
+      background: var(--apple-blue);
+      color: #ffffff;
+      border-color: var(--apple-blue);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0, 122, 255, 0.25);
+    }
+
+    .ios-chip.alert {
+      background: rgba(255, 237, 237, 0.85);
+      border-color: rgba(254, 202, 202, 0.9);
+      color: #b91c1c;
+    }
+
+    .ios-chip.alert:hover {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #ef4444;
+      box-shadow: 0 6px 14px rgba(239, 68, 68, 0.3);
+    }
+
+    .chip-divider {
+      width: 1px;
+      height: 18px;
+      background: rgba(0, 0, 0, 0.12);
+      margin: 0 4px;
+    }
+
+    .status-dynamic {
+      padding: 13px 20px;
+      border-radius: 18px;
+      font-size: 14px;
+      font-weight: 600;
+      display: none;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: var(--shadow-float);
+      animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .status-dynamic.success {
+      background: rgba(236, 253, 245, 0.85);
+      color: #065f46;
+      border-color: #a7f3d0;
+    }
+
+    .status-dynamic.fail {
+      background: rgba(254, 242, 242, 0.85);
+      color: #991b1b;
+      border-color: #fecaca;
+    }
+
+    .map-wrapper {
+      position: relative;
+      width: 100%;
+      height: 640px;
+      border-radius: 26px;
+      overflow: hidden;
+      border: 1.5px solid var(--glass-border);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      border-radius: 26px;
+      z-index: 1;
+    }
+
+    /* 지도 레이어 전환 시 부드러운 크로스페이드 & 줌 블러 애니메이션 */
+    @keyframes tileLayerSwap {
+      0% {
+        opacity: 0.2;
+        filter: blur(8px) brightness(1.15) saturate(1.2);
+      }
+      50% {
+        opacity: 0.8;
+        filter: blur(2px) brightness(1.04) saturate(1.05);
+      }
+      100% {
+        opacity: 1;
+        filter: blur(0px) brightness(1) saturate(1);
+      }
+    }
+
+    .tile-switching-anim {
+      animation: tileLayerSwap 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+      will-change: opacity, filter;
+    }
+
+    /* 개별 타일 부드러운 로드 페이드 */
+    .leaflet-tile {
+      transition: opacity 0.35s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    }
+
+    /* 지도 레이어 전환 시 조명 스캔 오버레이 */
+    .map-layer-flash {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 500;
+      border-radius: 26px;
+      background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.6) 0%, rgba(0, 122, 255, 0.2) 40%, rgba(255, 255, 255, 0) 75%);
+      opacity: 0;
+    }
+
+    .map-layer-flash.active {
+      animation: mapLayerFlashAnim 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes mapLayerFlashAnim {
+      0% { opacity: 0; transform: scale(0.97); }
+      30% { opacity: 0.85; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.02); }
+    }
+
+    /* 지도 레이어 전환 캡슐 다이내믹 토스트 알림 */
+    .layer-switch-toast {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-35px) scale(0.9);
+      background: rgba(18, 22, 32, 0.85);
+      color: #ffffff;
+      padding: 9px 20px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3), 0 0 25px rgba(0, 122, 255, 0.35);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      white-space: nowrap;
+    }
+
+    .layer-switch-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+
+    .layer-switch-toast .toast-indicator {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #34c759;
+      box-shadow: 0 0 10px #34c759, 0 0 18px rgba(52, 199, 89, 0.7);
+      animation: pulseGreen 1.5s infinite;
+    }
+
+    @keyframes pulseGreen {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.6; }
+    }
+
+    /* iOS Glassmorphism 레이어 컨트롤 스타일 */
+    .leaflet-control-layers {
+      background: rgba(255, 255, 255, 0.85) !important;
+      backdrop-filter: blur(20px) !important;
+      -webkit-backdrop-filter: blur(20px) !important;
+      border: 1.5px solid rgba(255, 255, 255, 0.95) !important;
+      border-radius: 18px !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
+      padding: 10px 14px !important;
+      font-family: inherit !important;
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      color: var(--text-main) !important;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+    }
+
+    .leaflet-control-layers:hover {
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.18) !important;
+    }
+
+    .leaflet-control-layers label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin: 4px 0 !important;
+      padding: 5px 9px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .leaflet-control-layers label:hover {
+      background: rgba(0, 122, 255, 0.08);
+      transform: translateX(4px);
+    }
+
+    .leaflet-control-layers label:active {
+      transform: scale(0.96);
+    }
+
+    .leaflet-control-layers input[type="radio"]:checked + span {
+      color: var(--apple-blue);
+      font-weight: 800;
+      text-shadow: 0 0 12px rgba(0, 122, 255, 0.3);
+    }
+
+    @keyframes radarPulse {
+      0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.6), 0 4px 12px rgba(0, 0, 0, 0.15); transform: translate(-50%, -50%) scale(1); }
+      50% { box-shadow: 0 0 0 10px rgba(0, 122, 255, 0), 0 6px 16px rgba(0, 0, 0, 0.2); transform: translate(-50%, -50%) scale(1.04); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0), 0 4px 12px rgba(0, 0, 0, 0.15); transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @keyframes radarPulseAlert {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7), 0 4px 12px rgba(0, 0, 0, 0.15); transform: translate(-50%, -50%) scale(1); }
+      50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0), 0 6px 16px rgba(0, 0, 0, 0.25); transform: translate(-50%, -50%) scale(1.05); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0), 0 4px 12px rgba(0, 0, 0, 0.15); transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .pop-marker-badge {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1.5px solid var(--apple-blue);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #1d1d1f;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      white-space: nowrap;
+      text-align: center;
+      cursor: pointer;
+      transform: translate(-50%, -50%);
+      animation: radarPulse 2.2s infinite ease-in-out;
+    }
+
+    .pop-marker-badge.alert {
+      border-color: #ef4444;
+      background: rgba(255, 241, 242, 0.96);
+      color: #b91c1c;
+      animation: radarPulseAlert 1.8s infinite ease-in-out;
+    }
+
+    .pop-marker-badge span.num {
+      color: var(--apple-blue);
+      font-weight: 800;
+      margin-left: 2px;
+    }
+
+    .pop-marker-badge.alert span.num {
+      color: #ef4444;
+    }
+
+    .leaflet-control-layers label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0;
+      cursor: pointer;
+    }
+
+    @keyframes cardPopBounce {
+      0% { opacity: 0; transform: scale(0.88) translateY(12px); }
+      70% { transform: scale(1.02) translateY(-2px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .leaflet-popup-content-wrapper {
+      background: rgba(255, 255, 255, 0.82) !important;
+      backdrop-filter: blur(24px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+      border: 1.5px solid rgba(255, 255, 255, 0.9) !important;
+      border-radius: 22px !important;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16) !important;
+      padding: 6px !important;
+      animation: cardPopBounce 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    }
+
+    .pop-card {
+      padding: 8px 12px;
+      min-width: 210px;
+      font-family: inherit;
+    }
+
+    .pop-header h3 {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .stat-badge {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 5px;
+      background: rgba(0, 122, 255, 0.12);
+      color: var(--apple-blue);
+      padding: 6px 14px;
+      border-radius: 12px;
+      margin: 4px 0 8px 0;
+      font-weight: 700;
+    }
+
+    .stat-badge .num {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .infra-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 8px 0;
+    }
+
+    .infra-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: rgba(239, 68, 68, 0.12);
+      color: #dc2626;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .infra-tag.warning {
+      background: rgba(245, 158, 11, 0.12);
+      color: #b45309;
+      border-color: rgba(245, 158, 11, 0.2);
+    }
+
+    .infra-tag.education {
+      background: rgba(99, 102, 241, 0.12);
+      color: #4338ca;
+      border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .infra-tag.culture {
+      background: rgba(168, 85, 247, 0.12);
+      color: #7c3aed;
+      border-color: rgba(168, 85, 247, 0.2);
+    }
+
+    .infra-tag.fire {
+      background: rgba(249, 115, 22, 0.12);
+      color: #c2410c;
+      border-color: rgba(249, 115, 22, 0.2);
+    }
+
+    .infra-tag.welfare {
+      background: rgba(20, 184, 166, 0.12);
+      color: #0f766e;
+      border-color: rgba(20, 184, 166, 0.2);
+    }
+
+    .infra-tag.digital {
+      background: rgba(6, 182, 212, 0.12);
+      color: #0e7490;
+      border-color: rgba(6, 182, 212, 0.2);
+    }
+
+    .infra-tag.water {
+      background: rgba(2, 132, 199, 0.12);
+      color: #0369a1;
+      border-color: rgba(2, 132, 199, 0.2);
+    }
+
+    .infra-tag.energy {
+      background: rgba(234, 179, 8, 0.12);
+      color: #a16207;
+      border-color: rgba(234, 179, 8, 0.2);
+    }
+
+    .infra-tag.living {
+      background: rgba(20, 184, 166, 0.12);
+      color: #0f766e;
+      border-color: rgba(20, 184, 166, 0.2);
+    }
+
+    .infra-tag.environment {
+      background: rgba(21, 128, 61, 0.12);
+      color: #15803d;
+      border-color: rgba(21, 128, 61, 0.2);
+    }
+
+    .infra-tag.job {
+      background: rgba(71, 85, 105, 0.12);
+      color: #334155;
+      border-color: rgba(71, 85, 105, 0.2);
+    }
+
+    .infra-tag.good {
+      background: rgba(16, 185, 129, 0.12);
+      color: #059669;
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    .infra-score-bar {
+      margin: 8px 0;
+      padding: 8px 10px;
+      background: rgba(0, 0, 0, 0.04);
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .desc {
+      font-size: 12px;
+      color: var(--text-sub);
+      line-height: 1.5;
+    }
+
+    /* 반응형 미디어 쿼리 (모바일, 태블릿, 데스크톱 모든 환경 최적화) */
+    @media (max-width: 768px) {
+      body {
+        padding: 8px 6px;
+      }
+
+      .glass-phone-shell {
+        border-radius: 24px;
+        padding: 16px 14px;
+        gap: 12px;
+      }
+
+      .glass-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding-bottom: 12px;
+      }
+
+      .brand-ios {
+        gap: 10px;
+      }
+
+      .sf-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+        border-radius: 12px;
+      }
+
+      .brand-text h1 {
+        font-size: 18px;
+      }
+
+      .brand-text p {
+        font-size: 11px;
+      }
+
+      .search-dock {
+        max-width: 100%;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .search-glass-pill {
+        width: 100%;
+        flex: 1 1 100%;
+      }
+
+      .glass-input {
+        padding: 11px 16px 11px 42px;
+        font-size: 13px;
+      }
+
+      .ios-btn {
+        flex: 1;
+        padding: 10px 14px;
+        font-size: 13px;
+        justify-content: center;
+      }
+
+      .glass-chips-bar {
+        padding: 8px 10px;
+        gap: 6px;
+      }
+
+      .chip-label {
+        width: 100%;
+        margin-bottom: 2px;
+      }
+
+      .chip-divider {
+        display: none;
+      }
+
+      .ios-chip {
+        padding: 5px 10px;
+        font-size: 11px;
+      }
+
+      .map-wrapper {
+        height: calc(100vh - 270px);
+        min-height: 420px;
+        border-radius: 18px;
+      }
+
+      #map {
+        height: 100%;
+        border-radius: 18px;
+      }
+
+      .leaflet-control-layers {
+        font-size: 11px !important;
+        padding: 6px 8px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .map-wrapper {
+        min-height: 380px;
+      }
+
+      .brand-text h1 {
+        font-size: 16px;
+      }
+    }
