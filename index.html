@@ -298,28 +298,160 @@
       border-color: #fecaca;
     }
 
-    #map {
+    .map-wrapper {
+      position: relative;
       width: 100%;
       height: 640px;
       border-radius: 26px;
+      overflow: hidden;
       border: 1.5px solid var(--glass-border);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      border-radius: 26px;
       z-index: 1;
+    }
+
+    /* 지도 레이어 전환 시 부드러운 크로스페이드 & 줌 블러 애니메이션 */
+    @keyframes tileLayerSwap {
+      0% {
+        opacity: 0.2;
+        filter: blur(8px) brightness(1.15) saturate(1.2);
+      }
+      50% {
+        opacity: 0.8;
+        filter: blur(2px) brightness(1.04) saturate(1.05);
+      }
+      100% {
+        opacity: 1;
+        filter: blur(0px) brightness(1) saturate(1);
+      }
+    }
+
+    .tile-switching-anim {
+      animation: tileLayerSwap 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+      will-change: opacity, filter;
+    }
+
+    /* 개별 타일 부드러운 로드 페이드 */
+    .leaflet-tile {
+      transition: opacity 0.35s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    }
+
+    /* 지도 레이어 전환 시 조명 스캔 오버레이 */
+    .map-layer-flash {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 500;
+      border-radius: 26px;
+      background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.6) 0%, rgba(0, 122, 255, 0.2) 40%, rgba(255, 255, 255, 0) 75%);
+      opacity: 0;
+    }
+
+    .map-layer-flash.active {
+      animation: mapLayerFlashAnim 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes mapLayerFlashAnim {
+      0% { opacity: 0; transform: scale(0.97); }
+      30% { opacity: 0.85; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.02); }
+    }
+
+    /* 지도 레이어 전환 캡슐 다이내믹 토스트 알림 */
+    .layer-switch-toast {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-35px) scale(0.9);
+      background: rgba(18, 22, 32, 0.85);
+      color: #ffffff;
+      padding: 9px 20px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3), 0 0 25px rgba(0, 122, 255, 0.35);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      white-space: nowrap;
+    }
+
+    .layer-switch-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+
+    .layer-switch-toast .toast-indicator {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #34c759;
+      box-shadow: 0 0 10px #34c759, 0 0 18px rgba(52, 199, 89, 0.7);
+      animation: pulseGreen 1.5s infinite;
+    }
+
+    @keyframes pulseGreen {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.6; }
     }
 
     /* iOS Glassmorphism 레이어 컨트롤 스타일 */
     .leaflet-control-layers {
-      background: rgba(255, 255, 255, 0.82) !important;
+      background: rgba(255, 255, 255, 0.85) !important;
       backdrop-filter: blur(20px) !important;
       -webkit-backdrop-filter: blur(20px) !important;
-      border: 1.5px solid rgba(255, 255, 255, 0.9) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
-      padding: 8px 12px !important;
+      border: 1.5px solid rgba(255, 255, 255, 0.95) !important;
+      border-radius: 18px !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
+      padding: 10px 14px !important;
       font-family: inherit !important;
       font-size: 13px !important;
       font-weight: 600 !important;
       color: var(--text-main) !important;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+    }
+
+    .leaflet-control-layers:hover {
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.18) !important;
+    }
+
+    .leaflet-control-layers label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin: 4px 0 !important;
+      padding: 5px 9px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .leaflet-control-layers label:hover {
+      background: rgba(0, 122, 255, 0.08);
+      transform: translateX(4px);
+    }
+
+    .leaflet-control-layers label:active {
+      transform: scale(0.96);
+    }
+
+    .leaflet-control-layers input[type="radio"]:checked + span {
+      color: var(--apple-blue);
+      font-weight: 800;
+      text-shadow: 0 0 12px rgba(0, 122, 255, 0.3);
     }
 
     @keyframes radarPulse {
@@ -546,9 +678,14 @@
         font-size: 11px;
       }
 
-      #map {
+      .map-wrapper {
         height: calc(100vh - 270px);
         min-height: 420px;
+        border-radius: 18px;
+      }
+
+      #map {
+        height: 100%;
         border-radius: 18px;
       }
 
@@ -559,7 +696,7 @@
     }
 
     @media (max-width: 480px) {
-      #map {
+      .map-wrapper {
         min-height: 380px;
       }
 
@@ -625,7 +762,14 @@
 
     <div id="resultInfo" class="status-dynamic"></div>
 
-    <div id="map"></div>
+    <div class="map-wrapper">
+      <div id="map"></div>
+      <div id="mapFlashEffect" class="map-layer-flash"></div>
+      <div id="layerToast" class="layer-switch-toast">
+        <span class="toast-indicator"></span>
+        <span id="layerToastText">지도 레이어 전환 중...</span>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -781,6 +925,43 @@
     };
 
     L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+
+    // 지도 레이어 전환 시 부드러운 애니메이션 및 다이내믹 토스트 발동
+    let toastTimer = null;
+    function showLayerToast(layerName) {
+      const toastEl = document.getElementById('layerToast');
+      const textEl = document.getElementById('layerToastText');
+      if (!toastEl || !textEl) return;
+
+      textEl.textContent = `${layerName} 모드로 전환되었습니다`;
+      toastEl.classList.add('show');
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toastEl.classList.remove('show');
+      }, 2000);
+    }
+
+    map.on('baselayerchange', (e) => {
+      // 1. 타일 컨테이너 부드러운 줌·블러·크로스페이드 애니메이션
+      const tilePane = map.getPane('tilePane');
+      if (tilePane) {
+        tilePane.classList.remove('tile-switching-anim');
+        void tilePane.offsetWidth; // Force Reflow
+        tilePane.classList.add('tile-switching-anim');
+      }
+
+      // 2. 조명 스캔 플래시 이펙트
+      const flashEl = document.getElementById('mapFlashEffect');
+      if (flashEl) {
+        flashEl.classList.remove('active');
+        void flashEl.offsetWidth; // Force Reflow
+        flashEl.classList.add('active');
+      }
+
+      // 3. 다이내믹 아일랜드 토스트 알림
+      showLayerToast(e.name);
+    });
 
     // 기기 화면 회전 또는 브라우저 창 크기 변경 시 지도 타일 즉시 자동 재배치
     window.addEventListener('resize', () => map.invalidateSize());
