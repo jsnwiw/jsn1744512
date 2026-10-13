@@ -723,15 +723,7 @@
     // 3. 구글 위성 + 도로명/지번만 표시 결합 레이어
     const googleCleanSatelliteGroup = L.layerGroup([googleSatBaseLayer, googleRoadsAndAddressesLayer]);
 
-    // 4. 국토교통부 브이월드(V-World) 도로명/지번 오버레이 옵션
-    const vworldHybridLayer = L.tileLayer('https://xdworld.vworld.kr/2d/Hybrid/service/{z}/{x}/{y}.png', {
-      maxZoom: 20,
-      maxNativeZoom: 19,
-      attribution: '&copy; V-World (국토교통부)'
-    });
-    const vworldSatGroup = L.layerGroup([googleSatBaseLayer, vworldHybridLayer]);
-
-    // 5. 일반 도로 지도 (OpenStreetMap)
+    // 4. 일반 도로 지도 (OpenStreetMap)
     const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
@@ -748,7 +740,6 @@
     // 베이스 레이어 전환 컨트롤
     const baseMaps = {
       "🛰️ 구글 위성 + 도로명·지번만 (시설 핀 없음)": googleCleanSatelliteGroup,
-      "🇰🇷 구글 위성 + 국토부 지번/지적": vworldSatGroup,
       "🌍 순수 구글 위성 (글씨 없음)": googleSatBaseLayer,
       "🗺️ 일반 도로 지도": osmLayer
     };
