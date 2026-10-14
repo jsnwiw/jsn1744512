@@ -3114,42 +3114,73 @@
       }
     ];
 
+    // 대한민국 및 주변 지역의 최근 지진을 USGS 공개 API에서 조회합니다.
+    // USGS는 지진 데이터만 제공하며, 산불·호우 등 모든 재난의 통합 API는 아닙니다.
     async function initDisasterEngine() {
-      // 1. USGS 지진 API (한반도 및 주변 반경) 비동기 호출
+      const badge = document.getElementById('popRealtimeBadge');
+      if (badge) badge.innerHTML = '🟡 실시간 지진 데이터 조회 중…';
+
+      // 이전 조회에서 생성된 핀/반경 원을 먼저 제거해 중복 표시를 방지합니다.
+      disasterLayerGroup.clearLayers();
+      activeDisasters = [];
+
       try {
         const now = new Date();
-        const past7Days = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
-        const res = await fetch(`https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=${past7Days}&minmagnitude=2.0&minlatitude=32&maxlatitude=40&minlongitude=124&maxlongitude=132`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.features && data.features.length > 0) {
-            data.features.slice(0, 3).forEach((eq, idx) => {
-              const coords = eq.geometry.coordinates; // [lng, lat, depth]
-              const mag = eq.properties.mag;
-              const place = eq.properties.place || "한반도 인근";
-              const dateStr = new Date(eq.properties.time).toLocaleString('ko-KR');
-              activeDisasters.unshift({
-                id: `eq-${idx}`,
-                title: `규모 ${mag} 지진 발생`,
-                category: "지진",
-                severity: mag >= 3.5 ? "severe" : "info",
-                severityText: mag >= 3.5 ? "규모주의" : "미소지진",
-                location: place,
-                lat: coords[1],
-                lng: coords[0],
-                radius: Math.max(5000, mag * 4000),
-                time: dateStr,
-                desc: `진앙 깊이 약 ${coords[2]}km. USGS 실시간 지진 관측망 자동 감지 데이터.`,
-                action: "낙하물 주의 및 안전한 장소 확인"
-              });
-            });
-          }
+        const startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+          .toISOString().slice(0, 10);
+        const apiUrl = new URL('https://earthquake.usgs.gov/fdsnws/event/1/query');
+        apiUrl.search = new URLSearchParams({
+          format: 'geojson',
+          starttime: startDate,
+          endtime: now.toISOString().slice(0, 10),
+          minmagnitude: '2.0',
+          minlatitude: '33',
+          maxlatitude: '38.7',
+          minlongitude: '124.5',
+          maxlongitude: '131.9',
+          orderby: 'time'
+        }).toString();
+
+        const response = await fetch(apiUrl.toString());
+        if (!response.ok) throw new Error(`USGS API HTTP ${response.status}`);
+        const data = await response.json();
+
+        activeDisasters = (data.features || []).map((eq, idx) => {
+          const coords = eq.geometry?.coordinates || [];
+          const mag = Number(eq.properties?.mag);
+          if (!Number.isFinite(coords[0]) || !Number.isFinite(coords[1]) || !Number.isFinite(mag)) return null;
+
+          const depth = Number.isFinite(coords[2]) ? coords[2] : 0;
+          const place = eq.properties?.place || '대한민국 인근 지역';
+          return {
+            id: `realtime-eq-${eq.id || idx}`,
+            title: `규모 ${mag.toFixed(1)} 지진 감지`,
+            category: '지진',
+            severity: mag >= 4.0 ? 'severe' : (mag >= 3.0 ? 'moderate' : 'info'),
+            severityText: mag >= 4.0 ? '주의 필요' : (mag >= 3.0 ? '주의' : '관측'),
+            location: place,
+            lat: coords[1],
+            lng: coords[0],
+            radius: Math.max(3000, mag * 4000),
+            time: eq.properties?.time ? new Date(eq.properties.time).toLocaleString('ko-KR') : '시간 정보 없음',
+            desc: `USGS 지진 관측 데이터입니다. 진앙 깊이 약 ${depth}km, 규모 ${mag.toFixed(1)}.`,
+            action: '공식 재난 문자와 기상청 안내를 확인하고, 흔들림이 느껴지면 안전 수칙을 따르세요.'
+          };
+        }).filter(Boolean);
+
+        if (badge) {
+          badge.innerHTML = `🟢 실시간 지진 데이터 갱신 · ${activeDisasters.length}건`;
+          badge.style.color = '#059669';
         }
       } catch (err) {
-        console.warn('실시간 지진 데이터 로딩 대체:', err);
+        console.warn('실시간 USGS 지진 데이터 조회 실패:', err);
+        if (badge) {
+          badge.innerHTML = '🔴 실시간 지진 데이터 조회 실패';
+          badge.style.color = '#b91c1c';
+        }
+        // 조회 실패를 실제 재난 발생으로 오인하지 않도록 임의의 재난 데이터를 만들지 않습니다.
       }
 
-      // 지도 위에 재해 반경 서클 및 마커 렌더링
       renderDisasterMapLayers();
     }
 
