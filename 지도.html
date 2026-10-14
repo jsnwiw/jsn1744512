@@ -1384,6 +1384,106 @@
       color: #fff;
       border-color: #2563eb;
     }
+
+    /* 📸 고화질 360도 로드뷰 (거리뷰) 팝업 모달 스타일 */
+    .btn-apple-roadview {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff !important;
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28);
+    }
+    .btn-apple-roadview:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+    }
+
+    .roadview-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: fadeInModal 0.25s ease-out;
+    }
+    .roadview-modal-overlay.active {
+      display: flex;
+    }
+
+    .roadview-modal-window {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1.5px solid rgba(255, 255, 255, 0.9);
+      border-radius: 24px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4);
+      width: 100%;
+      max-width: 860px;
+      height: 80vh;
+      max-height: 640px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .roadview-modal-header {
+      padding: 14px 20px;
+      background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+      border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .roadview-modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #065f46;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .roadview-modal-body {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: #0f172a;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .roadview-modal-body iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .roadview-btn-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 8px;
+      padding: 6px 14px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff !important;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 4px 10px rgba(5, 150, 105, 0.25);
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .roadview-btn-badge:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(5, 150, 105, 0.35);
+      background: linear-gradient(135deg, #059669, #047857);
+    }
   </style>
 </head>
 <body>
@@ -1417,6 +1517,7 @@
           <div id="autocompleteList" class="autocomplete-list"></div>
         </div>
         <button class="ios-btn btn-apple-blue" onclick="handleSearch()">검색</button>
+        <button class="ios-btn btn-apple-roadview" onclick="openCurrentMapRoadview()">📸 로드뷰</button>
         <button class="ios-btn btn-apple-danger" onclick="openDisasterModal()"><span class="disaster-pulse-dot"></span>🚨 재해 알림</button>
         <button class="ios-btn btn-apple-glass" onclick="resetMap()">전국 초기화</button>
       </div>
@@ -1602,6 +1703,21 @@
       </div>
       <div class="disaster-modal-body" id="disasterModalContent">
         <!-- JS로 실시간 재해 카드 렌더링 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 📸 실시간 로드뷰 (거리뷰) 팝업 창 (모달) -->
+  <div id="roadviewModalOverlay" class="roadview-modal-overlay" onclick="closeRoadviewModalOnBackdrop(event)">
+    <div class="roadview-modal-window">
+      <div class="roadview-modal-header">
+        <div class="roadview-modal-title">
+          <span id="roadviewModalTitle">📸 360° 현장 로드뷰 (거리뷰)</span>
+        </div>
+        <button class="disaster-modal-close" onclick="closeRoadviewModal()">&times;</button>
+      </div>
+      <div class="roadview-modal-body" id="roadviewModalBody">
+        <iframe id="roadviewIframe" src="" allowfullscreen loading="lazy"></iframe>
       </div>
     </div>
   </div>
@@ -1869,18 +1985,6 @@
       attribution: '&copy; OpenStreetMap contributors'
     });
 
-    // 4. 3D 입체 위성 뷰 (Esri World Imagery + 경사도 틸트 투시)
-    const esri3dLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 19,
-      attribution: '&copy; Esri & NASA EarthData'
-    });
-
-    // 5. 3D 지형 음영 맵 (OpenTopoMap 지형 등고선 & 입체 음영)
-    const topo3dLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-      maxZoom: 17,
-      attribution: '&copy; OpenTopoMap contributors'
-    });
-
     // 대한민국 영토 전용 경계 좌표 (남단 마라도~북단 휴전선, 서단 백령도~동단 독도)
     const koreaBounds = L.latLngBounds(
       [33.0, 124.5], // 남서단 (마라도 남측 해역, 백령도 서측)
@@ -1901,12 +2005,10 @@
     // 최초 로드 시 대한민국 전역에 완벽히 맞춤
     map.fitBounds(koreaBounds);
 
-    // 베이스 레이어 전환 컨트롤
+    // 베이스 레이어 전환 컨트롤 (3D 맵 제거, 선명한 위성 및 일반 지도로 구성)
     const baseMaps = {
-      "🛰️ 구글 위성 + 도로명·지번만 (기본)": googleCleanSatelliteLayer,
-      "⛰️ 3D 입체 위성 맵 (투시 원근감)": esri3dLayer,
-      "🏔️ 3D 입체 지형 음영 맵 (지형 고저차)": topo3dLayer,
-      "🌍 순수 구글 위성 (글씨 없음)": googleSatBaseLayer,
+      "🛰️ 위성 영상 + 도로명·지번 (기본)": googleCleanSatelliteLayer,
+      "🌍 순수 위성 사진 (라벨 없음)": googleSatBaseLayer,
       "🗺️ 일반 도로 지도": osmLayer
     };
 
@@ -1945,19 +2047,7 @@
         flashEl.classList.add('active');
       }
 
-      // 3. 3D 입체 맵 선택 시 래퍼에 3D 틸트 원근감 클래스 자동 토글
-      const mapWrapper = document.querySelector('.map-wrapper');
-      if (mapWrapper) {
-        if (e.name.includes('3D')) {
-          mapWrapper.classList.add('mode-3d');
-          setTimeout(() => map.invalidateSize(), 300);
-        } else {
-          mapWrapper.classList.remove('mode-3d');
-          setTimeout(() => map.invalidateSize(), 300);
-        }
-      }
-
-      // 4. 다이내믹 아일랜드 토스트 알림
+      // 3. 다이내믹 아일랜드 토스트 알림
       showLayerToast(e.name);
     });
 
@@ -2107,6 +2197,10 @@
                     대한민국 행정구역 좌표: 위도 ${lat.toFixed(4)}, 경도 ${lon.toFixed(4)}<br>
                     <span style="font-size:11.5px; color:#6b7280;">도로명/지번 주소: ${displayName}</span>
                   </p>
+
+                  <button class="roadview-btn-badge" onclick="openRoadviewModal(${lat}, ${lon}, '${townName}')">
+                    📸 해당 위치 360° 로드뷰 보기
+                  </button>
                 </div>
               `;
               searchMarker.bindPopup(popupHtml).openPopup();
@@ -2314,6 +2408,9 @@
             </div>
           ` : ''}
           <p class="desc">${r.desc}</p>
+          <button class="roadview-btn-badge" onclick="openRoadviewModal(${r.lat}, ${r.lng}, '${r.name}')">
+            📸 해당 위치 360° 로드뷰 보기
+          </button>
         </div>
       `;
     }
@@ -3163,6 +3260,34 @@
       if (e.target.id === 'disasterModalOverlay') {
         closeDisasterModal();
       }
+    }
+
+    // ── 📸 360° 로드뷰 (구글 거리뷰) 팝업 모달 엔진 ──
+    function openRoadviewModal(lat, lng, placeName) {
+      const modal = document.getElementById('roadviewModalOverlay');
+      const iframe = document.getElementById('roadviewIframe');
+      const title = document.getElementById('roadviewModalTitle');
+      if (!modal || !iframe) return;
+      const url = `https://maps.google.com/maps?q=&layer=c&cbll=${lat},${lng}&cbp=12,0,0,0,0&ie=UTF8&output=embed`;
+      if (title) title.innerHTML = `📸 360° 현장 로드뷰 · <span style="color:#059669">${placeName || '현재 위치'}</span>`;
+      iframe.src = url;
+      modal.classList.add('active');
+    }
+
+    function openCurrentMapRoadview() {
+      const center = map.getCenter();
+      openRoadviewModal(center.lat, center.lng, '현재 지도 중심 위치');
+    }
+
+    function closeRoadviewModal() {
+      const modal = document.getElementById('roadviewModalOverlay');
+      const iframe = document.getElementById('roadviewIframe');
+      if (modal) modal.classList.remove('active');
+      if (iframe) setTimeout(() => { iframe.src = ''; }, 300);
+    }
+
+    function closeRoadviewModalOnBackdrop(e) {
+      if (e.target.id === 'roadviewModalOverlay') closeRoadviewModal();
     }
 
     // 특정 재해 위치로 지도 이동
