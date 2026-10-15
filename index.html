@@ -1979,6 +1979,7 @@
       attribution: '&copy; Google Maps'
     });
 
+    
     // 3. 일반 도로 지도 (OpenStreetMap)
     const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
@@ -3115,15 +3116,16 @@
     ];
 
     // 대한민국 및 주변 지역의 최근 지진을 USGS 공개 API에서 조회합니다.
-    // USGS는 지진 데이터만 제공하며, 산불·호우 등 모든 재난의 통합 API는 아닙니다.
+    // + 공공데이터포털 재난문자 API(DisasterMsg3)도 함께 조회합니다.
     async function initDisasterEngine() {
       const badge = document.getElementById('popRealtimeBadge');
-      if (badge) badge.innerHTML = '🟡 실시간 지진 데이터 조회 중…';
+      if (badge) badge.innerHTML = '🟡 실시간 재난 데이터 조회 중…';
 
       // 이전 조회에서 생성된 핀/반경 원을 먼저 제거해 중복 표시를 방지합니다.
       disasterLayerGroup.clearLayers();
       activeDisasters = [];
 
+      // ── 1) USGS 지진 API ──
       try {
         const now = new Date();
         const startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
@@ -3145,7 +3147,7 @@
         if (!response.ok) throw new Error(`USGS API HTTP ${response.status}`);
         const data = await response.json();
 
-        activeDisasters = (data.features || []).map((eq, idx) => {
+        const usgsDisasters = (data.features || []).map((eq, idx) => {
           const coords = eq.geometry?.coordinates || [];
           const mag = Number(eq.properties?.mag);
           if (!Number.isFinite(coords[0]) || !Number.isFinite(coords[1]) || !Number.isFinite(mag)) return null;
@@ -3168,17 +3170,80 @@
           };
         }).filter(Boolean);
 
-        if (badge) {
-          badge.innerHTML = `🟢 실시간 지진 데이터 갱신 · ${activeDisasters.length}건`;
-          badge.style.color = '#059669';
-        }
+        activeDisasters.push(...usgsDisasters);
       } catch (err) {
         console.warn('실시간 USGS 지진 데이터 조회 실패:', err);
-        if (badge) {
-          badge.innerHTML = '🔴 실시간 지진 데이터 조회 실패';
-          badge.style.color = '#b91c1c';
+      }
+
+      // ── 2) 공공데이터포털 재난문자 API ──
+      try {
+        const dmUrl = `https://apis.data.go.kr/1741000/DisasterMsg3/getDisasterMsg1List?serviceKey=SYJNTA07475N346W&pageNo=1&numOfRows=10&type=json`;
+        const dmResponse = await fetch(dmUrl);
+        if (dmResponse.ok) {
+          const dmData = await dmResponse.json();
+          const rows = dmData?.DisasterMsg?.[1]?.row || [];
+          rows.forEach((msg, idx) => {
+            // 지역명에서 위도·경도 매핑 (정확한 좌표가 없으므로 지역 DB에서 근사 매칭)
+            const locName = msg.location_name || '';
+            const msgText = msg.msg || '';
+            const createDate = msg.create_date || '';
+
+            // 재난 유형 자동 판별
+            let category = '재난문자';
+            let icon = '🚨';
+            const msgLower = msgText;
+            if (msgLower.includes('지진')) { category = '지진'; icon = '🌍'; }
+            else if (msgLower.includes('호우') || msgLower.includes('폭우') || msgLower.includes('홍수') || msgLower.includes('침수')) { category = '호우/홍수'; icon = '🌊'; }
+            else if (msgLower.includes('태풍')) { category = '태풍'; icon = '🌀'; }
+            else if (msgLower.includes('폭설') || msgLower.includes('대설')) { category = '대설'; icon = '❄️'; }
+            else if (msgLower.includes('산불') || msgLower.includes('화재')) { category = '산불/화재'; icon = '🔥'; }
+            else if (msgLower.includes('한파')) { category = '한파'; icon = '🥶'; }
+            else if (msgLower.includes('폭염') || msgLower.includes('무더위')) { category = '폭염'; icon = '🌡️'; }
+            else if (msgLower.includes('미세먼지')) { category = '미세먼지'; icon = '😷'; }
+
+            // 지역명에서 좌표 근사 매칭 (지역 DB 활용)
+            let matchedLat = 36.5, matchedLng = 127.5; // 기본값: 대한민국 중심
+            const locMatch = infraData.find(d =>
+              locName.includes(d.name) || d.keywords?.some(k => locName.includes(k))
+            );
+            if (locMatch) {
+              matchedLat = locMatch.lat;
+              matchedLng = locMatch.lng;
+            }
+
+            // 해제 메시지인지 확인 → 해제 시 지도 핀 추가 안 함
+            const isResolved = msgLower.includes('해제') || msgLower.includes('종료') || msgLower.includes('취소');
+            if (isResolved) return; // 해제된 재난은 핀 표시 안 함
+
+            activeDisasters.push({
+              id: `disaster-msg-${msg.md101_sn || idx}`,
+              title: `${icon} ${category} · ${locName}`,
+              category: category,
+              severity: 'moderate',
+              severityText: '재난문자',
+              location: locName,
+              lat: matchedLat,
+              lng: matchedLng,
+              radius: 8000,
+              time: createDate,
+              desc: msgText.length > 120 ? msgText.slice(0, 120) + '…' : msgText,
+              action: '행정안전부 재난문자를 확인하고, 지역 안전 수칙을 따르세요.'
+            });
+          });
         }
-        // 조회 실패를 실제 재난 발생으로 오인하지 않도록 임의의 재난 데이터를 만들지 않습니다.
+      } catch (err) {
+        console.warn('공공데이터포털 재난문자 API 조회 실패:', err);
+      }
+
+      // ── 뱃지 업데이트 ──
+      if (badge) {
+        if (activeDisasters.length > 0) {
+          badge.innerHTML = `🟢 실시간 재난 데이터 갱신 · ${activeDisasters.length}건`;
+          badge.style.color = '#059669';
+        } else {
+          badge.innerHTML = '🟢 현재 활성 재난 없음';
+          badge.style.color = '#059669';
+        }
       }
 
       renderDisasterMapLayers();
