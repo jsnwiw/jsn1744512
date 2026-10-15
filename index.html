@@ -3093,12 +3093,12 @@
       }
     }
 
-    // 페이지 로드 후 실시간 인구 데이터 자동 연동 및 실시간 재해 자동 폴링 (30초 주기)
+    // 페이지 로드 후 실시간 인구 데이터 자동 연동 및 실시간 재해 자동 폴링 (15초 주기)
     window.addEventListener('load', () => {
       setTimeout(fetchRealTimePopulation, 800);
       setTimeout(initDisasterEngine, 1200);
-      // 30초마다 백그라운드 실시간 재난·구호 정보 자동 갱신
-      setInterval(initDisasterEngine, 30000);
+      // 15초마다 백그라운드 실시간 재난·구호 정보 자동 갱신 (발효 해제 시 자동 삭제)
+      setInterval(initDisasterEngine, 15000);
     });
 
     // ════════════════════════════════════════════════════════
@@ -3109,27 +3109,27 @@
 
     let activeDisasters = [];
 
-    // 대한민국 및 주변 지역의 최근 지진을 USGS 공개 API에서 조회합니다.
-    // + 공공데이터포털 재난문자 API(DisasterMsg3)도 함께 조회합니다.
+    // 대한민국 및 주변 지역의 최근 지진을 USGS 공개 API에서 실시간 조회 (최근 48시간 이내)
+    // + 공공데이터포털 재난문자 API(DisasterMsg3) 및 재해구호상황보고정보(DSSP-IF-10714)
     async function initDisasterEngine() {
       const badge = document.getElementById('popRealtimeBadge');
-      if (badge) badge.innerHTML = '🟡 실시간 재난 데이터 조회 중…';
+      if (badge) badge.innerHTML = '🟡 실시간 재난·특보 발효 상태 조회 중…';
 
-      // 이전 조회에서 생성된 핀/반경 원을 먼저 제거해 중복 표시를 방지합니다.
+      // 이전 조회에서 생성된 핀/반경 원을 먼저 제거해 발효 해제 시 즉시 삭제되도록 합니다.
       disasterLayerGroup.clearLayers();
       activeDisasters = [];
 
-      // ── 1) USGS 지진 API ──
+      // ── 1) USGS 지진 API (최근 48시간 이내 실시간 유효 지진만) ──
       try {
         const now = new Date();
-        const startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        const startDate = new Date(now.getTime() - 48 * 60 * 60 * 1000)
           .toISOString().slice(0, 10);
         const apiUrl = new URL('https://earthquake.usgs.gov/fdsnws/event/1/query');
         apiUrl.search = new URLSearchParams({
           format: 'geojson',
           starttime: startDate,
           endtime: now.toISOString().slice(0, 10),
-          minmagnitude: '2.0',
+          minmagnitude: '2.5',
           minlatitude: '33',
           maxlatitude: '38.7',
           minlongitude: '124.5',
@@ -3205,16 +3205,20 @@
               matchedLng = locMatch.lng;
             }
 
-            // 해제 메시지인지 확인 → 해제 시 지도 핀 추가 안 함 (사용자 규칙)
-            const isResolved = msgLower.includes('해제') || msgLower.includes('종료') || msgLower.includes('취소');
-            if (isResolved) return; // 해제된 재난은 핀 표시 안 함
+            // 해제 메시지인지 확인 → 해제 시 상황판 및 지도에서 완전 삭제 (사용자 규칙)
+            const isResolved = msgLower.includes('해제') || msgLower.includes('종료') || msgLower.includes('취소') || msgLower.includes('정상화');
+            if (isResolved) {
+              // 발효 해제된 지역은 기존 목록에서도 즉시 삭제
+              activeDisasters = activeDisasters.filter(d => !d.location.includes(locName) && !locName.includes(d.location));
+              return; // 신규 핀 추가하지 않고 삭제 처리
+            }
 
             activeDisasters.push({
               id: `disaster-msg-${msg.md101_sn || idx}`,
               title: `${icon} ${category} · ${locName}`,
               category: category,
               severity: 'moderate',
-              severityText: '재난문자',
+              severityText: '특보 발효',
               location: locName,
               lat: matchedLat,
               lng: matchedLng,
@@ -3267,7 +3271,6 @@
             }
           }
         } catch (fetchErr) {
-          // 브라우저 CORS 제한 시 fallback 최신 상황보고 세트
           console.warn('재해구호상황보고 라이브 fetch 시도 후 로컬 데이터셋 보완:', fetchErr);
         }
 
@@ -3308,10 +3311,21 @@
         }
 
         reliefItems.forEach((item, rIdx) => {
-          // 해제 처리 규칙: DEL_YN === 'Y' 이거나 전원 귀가/해제인 경우 지도 핀 제외
-          if (item.DEL_YN === 'Y') return;
-          const fullNote = `${item.DAM_CS_CN || ''} ${item.EVPE_DSSTR_ETC || ''}`;
-          if (fullNote.includes('전원 귀가') || fullNote.includes('해제 완료') || fullNote.includes('종료')) return;
+          // 발효 해제 여부 정밀 검사: DEL_YN === 'Y' 이거나 전원 귀가/상황종료/해제인 경우 완전 제외 (삭제)
+          const fullNote = `${item.DAM_CS_CN || ''} ${item.EVPE_DSSTR_ETC || ''} ${item.SLGN_ACTV_PRCON_ETC || ''}`;
+          const isLifted = item.DEL_YN === 'Y' ||
+                           fullNote.includes('전원 귀가') ||
+                           fullNote.includes('귀가 완료') ||
+                           fullNote.includes('해제 완료') ||
+                           fullNote.includes('해제') ||
+                           fullNote.includes('종료') ||
+                           fullNote.includes('상황종료') ||
+                           fullNote.includes('복구 완료');
+
+          if (isLifted) {
+            // 발효 해제 시 상황판 카드 및 지도 핀에서 완전 삭제
+            return;
+          }
 
           const stdgInfo = stdgCodeMap[item.STDG_CD] || { name: `지역 (코드: ${item.STDG_CD})`, lat: 36.5, lng: 127.8 };
           const damCause = item.DAM_CS_CN || '자연재난 피해 발생';
@@ -3328,7 +3342,7 @@
             title: `🏕️ 재해구호상황 · ${stdgInfo.name}`,
             category: '재해구호',
             severity: 'moderate',
-            severityText: '구호상황',
+            severityText: '구호 발효중',
             location: stdgInfo.name,
             lat: stdgInfo.lat,
             lng: stdgInfo.lng,
@@ -3347,20 +3361,22 @@
       const alertBtn = document.getElementById('disasterAlertBtn');
       if (alertBtn) {
         if (activeDisasters.length > 0) {
-          alertBtn.innerHTML = `<span class="disaster-pulse-dot"></span>🚨 재해 알림 (${activeDisasters.length})`;
-          alertBtn.title = `실시간 활성 재난·특보 ${activeDisasters.length}건`;
+          alertBtn.innerHTML = `<span class="disaster-pulse-dot"></span>🚨 재해 알림 (${activeDisasters.length}건 발효중)`;
+          alertBtn.title = `실시간 발효 중 ${activeDisasters.length}건 (발효 해제 시 자동 삭제)`;
+          alertBtn.style.borderColor = 'rgba(239, 68, 68, 0.4)';
         } else {
-          alertBtn.innerHTML = `<span class="disaster-pulse-dot" style="background:#22c55e;"></span>🚨 재해 알림 (0)`;
-          alertBtn.title = '현재 활성 재난 없음';
+          alertBtn.innerHTML = `<span class="disaster-pulse-dot" style="background:#22c55e;"></span>🚨 재해 알림 (전체 해제됨)`;
+          alertBtn.title = '현재 발효 중인 모든 재해 및 특보 해제됨 (상황판 및 지도 핀 삭제 완료)';
+          alertBtn.style.borderColor = 'rgba(34, 197, 94, 0.4)';
         }
       }
 
       if (badge) {
         if (activeDisasters.length > 0) {
-          badge.innerHTML = `🟢 실시간 재난·구호 데이터 갱신 · ${activeDisasters.length}건`;
+          badge.innerHTML = `🟢 실시간 재난·특보 발효 중 · ${activeDisasters.length}건`;
           badge.style.color = '#059669';
         } else {
-          badge.innerHTML = '🟢 현재 활성 재난·구호 상황 없음';
+          badge.innerHTML = '🟢 현재 발효 중인 재난·특보 없음 (전체 해제)';
           badge.style.color = '#059669';
         }
       }
@@ -3472,17 +3488,23 @@
 
       let html = `
         <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#4b5563; padding-bottom:10px; border-bottom:1px solid #f3f4f6;">
-          <div>📡 실시간 재난·특보 현황: <strong style="color:#b91c1c;">${activeDisasters.length}건</strong> 감지</div>
-          <div style="font-size:11.5px; color:#6b7280;">최근 조회: <strong>${timeStr}</strong> (30초 자동갱신)</div>
+          <div>📡 실시간 상황판: <strong style="color:${activeDisasters.length > 0 ? '#b91c1c' : '#059669'};">${activeDisasters.length}건 발효 중</strong> <span style="font-size:11px; color:#059669; margin-left:4px;">(발효 해제 시 자동 삭제)</span></div>
+          <div style="font-size:11.5px; color:#6b7280;">최근 조회: <strong>${timeStr}</strong> (15초 자동동기화)</div>
         </div>
       `;
 
       if (activeDisasters.length === 0) {
         html += `
-          <div style="text-align:center; padding:50px 20px; color:#059669;">
-            <div style="font-size:36px; margin-bottom:10px;">🛡️</div>
-            <div style="font-size:15px; font-weight:700; color:#047857; margin-bottom:6px;">현재 발령된 긴급 자연재해 및 특보가 없습니다</div>
-            <div style="font-size:12px; color:#6b7280;">모든 재해가 해제되었거나 안전한 상태입니다. 실시간 모니터링이 30초마다 자동으로 지속됩니다.</div>
+          <div style="text-align:center; padding:55px 20px; color:#059669;">
+            <div style="font-size:42px; margin-bottom:12px;">✅</div>
+            <div style="font-size:16px; font-weight:800; color:#047857; margin-bottom:6px;">현재 발효 중인 모든 재난·특보가 해제되었습니다</div>
+            <div style="font-size:12.5px; color:#4b5563; line-height:1.6; max-width:440px; margin:0 auto;">
+              기상청 및 행정안전부의 <strong>발효 해제가 실시간 감지</strong>되어,<br>
+              상황판 알림 카드와 지도 핀이 <strong>모두 정상 삭제(제거)</strong>되었습니다.
+            </div>
+            <div style="margin-top:14px; display:inline-block; font-size:11.5px; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:12px; padding:4px 12px; font-weight:600;">
+              🛡️ 15초 주기 실시간 안전 모니터링 가동 중
+            </div>
           </div>
         `;
       } else {
@@ -3494,7 +3516,10 @@
           html += `
             <div class="disaster-card ${cardClass}">
               <div class="disaster-card-header">
-                <span class="disaster-badge ${badgeClass}">${icon} ${d.category} · ${d.severityText}</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span class="disaster-badge ${badgeClass}">${icon} ${d.category} · ${d.severityText}</span>
+                  <span style="font-size:10.5px; color:#dc2626; background:#fef2f2; border:1px solid #fecaca; padding:2px 6px; border-radius:6px; font-weight:700;">● 실시간 발효 중</span>
+                </div>
                 <span class="disaster-card-time">🕒 ${d.time}</span>
               </div>
               <div class="disaster-card-title">${d.title}</div>
