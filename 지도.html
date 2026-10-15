@@ -1297,6 +1297,35 @@
       background: rgba(239, 68, 68, 0.2);
       color: #dc2626;
     }
+    .disaster-refresh-btn {
+      background: #ffffff;
+      border: 1px solid rgba(220, 38, 38, 0.3);
+      border-radius: 14px;
+      padding: 5px 11px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #991b1b;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .disaster-refresh-btn:hover {
+      background: #fef2f2;
+      border-color: #dc2626;
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
+      transform: translateY(-1px);
+    }
+    .disaster-refresh-btn:active {
+      transform: translateY(0);
+    }
+    .disaster-refresh-btn.spinning .spin-icon {
+      display: inline-block;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
     .disaster-modal-body {
       padding: 18px 20px;
       overflow-y: auto;
@@ -1518,7 +1547,7 @@
         </div>
         <button class="ios-btn btn-apple-blue" onclick="handleSearch()">검색</button>
         <button class="ios-btn btn-apple-roadview" onclick="openCurrentMapRoadview()">📸 로드뷰</button>
-        <button class="ios-btn btn-apple-danger" onclick="openDisasterModal()"><span class="disaster-pulse-dot"></span>🚨 재해 알림</button>
+        <button id="disasterAlertBtn" class="ios-btn btn-apple-danger" onclick="openDisasterModal()"><span class="disaster-pulse-dot"></span>🚨 재해 알림</button>
         <button class="ios-btn btn-apple-glass" onclick="resetMap()">전국 초기화</button>
       </div>
     </header>
@@ -1698,8 +1727,14 @@
       <div class="disaster-modal-header">
         <div class="disaster-modal-title">
           <span>🚨 실시간 자연재해 & 기상특보 상황판</span>
+          <span id="disasterLiveBadge" style="font-size:11px; padding:2px 8px; border-radius:12px; background:#dcfce7; color:#15803d; font-weight:700; display:inline-flex; align-items:center; gap:4px;"><span style="width:6px; height:6px; border-radius:50%; background:#22c55e; display:inline-block; animation:disasterPulse 1.5s infinite;"></span>LIVE 실시간</span>
         </div>
-        <button class="disaster-modal-close" onclick="closeDisasterModal()">&times;</button>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button id="disasterRefreshBtn" class="disaster-refresh-btn" onclick="refreshDisasterRealtime(event)" title="실시간 최신 재난·구호 정보 다시 조회">
+            <span class="spin-icon">🔄</span> 실시간 새로고침
+          </button>
+          <button class="disaster-modal-close" onclick="closeDisasterModal()">&times;</button>
+        </div>
       </div>
       <div class="disaster-modal-body" id="disasterModalContent">
         <!-- JS로 실시간 재해 카드 렌더링 -->
@@ -3058,10 +3093,12 @@
       }
     }
 
-    // 페이지 로드 후 실시간 인구 데이터 자동 연동
+    // 페이지 로드 후 실시간 인구 데이터 자동 연동 및 실시간 재해 자동 폴링 (30초 주기)
     window.addEventListener('load', () => {
       setTimeout(fetchRealTimePopulation, 800);
       setTimeout(initDisasterEngine, 1200);
+      // 30초마다 백그라운드 실시간 재난·구호 정보 자동 갱신
+      setInterval(initDisasterEngine, 30000);
     });
 
     // ════════════════════════════════════════════════════════
@@ -3070,50 +3107,7 @@
     let disasterLayerGroup = L.layerGroup();
     disasterLayerGroup.addTo(map);
 
-    let activeDisasters = [
-      {
-        id: "dis-1",
-        title: "산불 경보 (건조주의보 중첩)",
-        category: "산불",
-        severity: "severe",
-        severityText: "경보 발령",
-        location: "강원 삼척시 도계읍 일대",
-        lat: 37.2800,
-        lng: 129.0400,
-        radius: 12000,
-        time: "방금 전 (10분 전 갱신)",
-        desc: "실효습도 30% 이하 건조 강풍으로 삼척 산간 지역 산불위험지수 '위험' 단계. 인근 주민 및 입산객 접근 통제.",
-        action: "입산 금지 및 긴급 소방 헬기 2대 대기 중"
-      },
-      {
-        id: "dis-2",
-        title: "호우주의보 및 계곡 급류 범람 우려",
-        category: "호우",
-        severity: "moderate",
-        severityText: "주의보",
-        location: "전남 구례군 지리산 피아골 일원",
-        lat: 35.2600,
-        lng: 127.5300,
-        radius: 10000,
-        time: "1시간 전",
-        desc: "시간당 30mm 강한 비 구름대 유입. 계곡물 수위 급상승으로 야영객 대피령 발령.",
-        action: "피아골·뱀사골 탐방로 통제 및 저지대 대피 권고"
-      },
-      {
-        id: "dis-3",
-        title: "강풍·풍랑 경보",
-        category: "강풍",
-        severity: "moderate",
-        severityText: "주의보",
-        location: "제주 서귀포시 해안 및 도서 지역",
-        lat: 33.2541,
-        lng: 126.5601,
-        radius: 15000,
-        time: "3시간 전",
-        desc: "순간최대풍속 20m/s 이상 강풍과 최고 4.0m 파고. 소형 어선 출항 전면 통제.",
-        action: "해안가 산책로 및 방파제 출입 제한"
-      }
-    ];
+    let activeDisasters = [];
 
     // 대한민국 및 주변 지역의 최근 지진을 USGS 공개 API에서 조회합니다.
     // + 공공데이터포털 재난문자 API(DisasterMsg3)도 함께 조회합니다.
@@ -3348,7 +3342,19 @@
         console.warn('재해구호상황보고정보 연동 처리 오류:', reliefErr);
       }
 
-      // ── 뱃지 업데이트 ──
+      // ── 헤더 버튼 및 뱃지 실시간 업데이트 ──
+      lastDisasterUpdatedTime = new Date();
+      const alertBtn = document.getElementById('disasterAlertBtn');
+      if (alertBtn) {
+        if (activeDisasters.length > 0) {
+          alertBtn.innerHTML = `<span class="disaster-pulse-dot"></span>🚨 재해 알림 (${activeDisasters.length})`;
+          alertBtn.title = `실시간 활성 재난·특보 ${activeDisasters.length}건`;
+        } else {
+          alertBtn.innerHTML = `<span class="disaster-pulse-dot" style="background:#22c55e;"></span>🚨 재해 알림 (0)`;
+          alertBtn.title = '현재 활성 재난 없음';
+        }
+      }
+
       if (badge) {
         if (activeDisasters.length > 0) {
           badge.innerHTML = `🟢 실시간 재난·구호 데이터 갱신 · ${activeDisasters.length}건`;
@@ -3357,6 +3363,12 @@
           badge.innerHTML = '🟢 현재 활성 재난·구호 상황 없음';
           badge.style.color = '#059669';
         }
+      }
+
+      // 모달이 열려 있는 상태라면 모달 내용도 즉시 최신화
+      const modal = document.getElementById('disasterModalOverlay');
+      if (modal && modal.classList.contains('active')) {
+        renderDisasterModalContent();
       }
 
       renderDisasterMapLayers();
@@ -3378,6 +3390,7 @@
         });
 
         // 펄스 마커
+        const iconSymbol = d.category === '산불' ? '🔥' : (d.category === '호우' || d.category === '호우/홍수' ? '🌧️' : (d.category === '지진' ? '🌍' : (d.category === '재해구호' ? '🏕️' : '⚠️')));
         const iconHtml = `
           <div style="
             background: ${color};
@@ -3393,7 +3406,7 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             animation: disasterPulse 2s infinite;
           ">
-            ${d.category === '산불' ? '🔥' : (d.category === '호우' ? '🌧️' : (d.category === '지진' ? '⚡' : '⚠️'))}
+            ${iconSymbol}
           </div>
         `;
         const markerIcon = L.divIcon({
@@ -3421,42 +3434,82 @@
       });
     }
 
-    // 모달 열기
-    function openDisasterModal() {
+    let lastDisasterUpdatedTime = null;
+    let isDisasterRefreshing = false;
+
+    // 모달 열기 (실시간 최신 조회 실행)
+    async function openDisasterModal() {
       const modal = document.getElementById('disasterModalOverlay');
+      if (modal) modal.classList.add('active');
+      renderDisasterModalContent();
+      // 열릴 때 최신 실시간 재조회
+      await refreshDisasterRealtime();
+    }
+
+    // 실시간 수동 새로고침
+    async function refreshDisasterRealtime(e) {
+      if (e) e.stopPropagation();
+      if (isDisasterRefreshing) return;
+      isDisasterRefreshing = true;
+
+      const refreshBtn = document.getElementById('disasterRefreshBtn');
+      if (refreshBtn) refreshBtn.classList.add('spinning');
+
+      try {
+        await initDisasterEngine();
+      } finally {
+        isDisasterRefreshing = false;
+        if (refreshBtn) refreshBtn.classList.remove('spinning');
+        renderDisasterModalContent();
+      }
+    }
+
+    function renderDisasterModalContent() {
       const content = document.getElementById('disasterModalContent');
-      if (!modal || !content) return;
+      if (!content) return;
+
+      const timeStr = lastDisasterUpdatedTime ? lastDisasterUpdatedTime.toLocaleTimeString('ko-KR') : new Date().toLocaleTimeString('ko-KR');
 
       let html = `
-        <div style="font-size:13px; color:#6b7280; padding-bottom:8px; border-bottom:1px solid #f3f4f6;">
-          현재 관측된 <strong>${activeDisasters.length}건</strong>의 기상특보 및 자연재해 알림입니다. 카드를 클릭하면 해당 지역 지도로 바로 이동합니다.
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#4b5563; padding-bottom:10px; border-bottom:1px solid #f3f4f6;">
+          <div>📡 실시간 재난·특보 현황: <strong style="color:#b91c1c;">${activeDisasters.length}건</strong> 감지</div>
+          <div style="font-size:11.5px; color:#6b7280;">최근 조회: <strong>${timeStr}</strong> (30초 자동갱신)</div>
         </div>
       `;
 
-      activeDisasters.forEach(d => {
-        const badgeClass = d.severity === 'severe' ? 'severe' : (d.severity === 'moderate' ? 'moderate' : 'info');
-        const cardClass = d.severity === 'severe' ? 'level-severe' : (d.severity === 'moderate' ? 'level-moderate' : 'level-info');
-        const icon = d.category === '산불' ? '🔥' : (d.category === '호우' || d.category === '호우/홍수' ? '🌧️' : (d.category === '지진' ? '🌍' : (d.category === '재해구호' ? '🏕️' : '⚠️')));
-
+      if (activeDisasters.length === 0) {
         html += `
-          <div class="disaster-card ${cardClass}">
-            <div class="disaster-card-header">
-              <span class="disaster-badge ${badgeClass}">${icon} ${d.category} · ${d.severityText}</span>
-              <span class="disaster-card-time">🕒 ${d.time}</span>
-            </div>
-            <div class="disaster-card-title">${d.title}</div>
-            <div style="font-size:12.5px; font-weight:600; color:#1f2937;">📍 ${d.location}</div>
-            <div class="disaster-card-desc">${d.desc}</div>
-            <div style="font-size:12px; color:#b91c1c; font-weight:600;">🛡️ 안전 지침: ${d.action}</div>
-            <button class="disaster-card-btn" onclick="goToDisasterLocation(${d.lat}, ${d.lng}, '${d.title}')">
-              🗺️ 지도에서 위치 확인하기
-            </button>
+          <div style="text-align:center; padding:50px 20px; color:#059669;">
+            <div style="font-size:36px; margin-bottom:10px;">🛡️</div>
+            <div style="font-size:15px; font-weight:700; color:#047857; margin-bottom:6px;">현재 발령된 긴급 자연재해 및 특보가 없습니다</div>
+            <div style="font-size:12px; color:#6b7280;">모든 재해가 해제되었거나 안전한 상태입니다. 실시간 모니터링이 30초마다 자동으로 지속됩니다.</div>
           </div>
         `;
-      });
+      } else {
+        activeDisasters.forEach(d => {
+          const badgeClass = d.severity === 'severe' ? 'severe' : (d.severity === 'moderate' ? 'moderate' : 'info');
+          const cardClass = d.severity === 'severe' ? 'level-severe' : (d.severity === 'moderate' ? 'level-moderate' : 'level-info');
+          const icon = d.category === '산불' ? '🔥' : (d.category === '호우' || d.category === '호우/홍수' ? '🌧️' : (d.category === '지진' ? '🌍' : (d.category === '재해구호' ? '🏕️' : '⚠️')));
+
+          html += `
+            <div class="disaster-card ${cardClass}">
+              <div class="disaster-card-header">
+                <span class="disaster-badge ${badgeClass}">${icon} ${d.category} · ${d.severityText}</span>
+                <span class="disaster-card-time">🕒 ${d.time}</span>
+              </div>
+              <div class="disaster-card-title">${d.title}</div>
+              <div style="font-size:12.5px; font-weight:600; color:#1f2937;">📍 ${d.location}</div>
+              <div class="disaster-card-desc">${d.desc}</div>
+              <div style="font-size:12px; color:#b91c1c; font-weight:600;">🛡️ 안전 지침: ${d.action}</div>
+              <button class="disaster-card-btn" onclick="goToDisasterLocation(${d.lat}, ${d.lng}, '${d.title}')">
+                🗺️ 지도에서 위치 확인하기
+              </button>
+            </div>
+          `;
+        });
+      }
 
       content.innerHTML = html;
-      modal.classList.add('active');
     }
 
     // 모달 닫기
